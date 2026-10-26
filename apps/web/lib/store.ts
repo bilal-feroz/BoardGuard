@@ -80,6 +80,11 @@ export const useStore = create<State>((set, get) => {
     try {
       const { data, ms, env } = await fn();
       const last = data.observations[data.observations.length - 1];
+      // Surface the evidence behind a recapture request: switch on the layer that shows it.
+      const codes = new Set((data.pending_action?.type === "RECAPTURE" ? data.pending_action.issues ?? [] : []).map((i) => i.code));
+      if (codes.size) {
+        set((s) => ({ layers: { ...s.layers, glare: s.layers.glare || codes.has("GLARE"), tiles: s.layers.tiles || codes.has("BLUR") || codes.has("OVEREXPOSED") || codes.has("UNDEREXPOSED") } }));
+      }
       set({
         session: data,
         busy: null,

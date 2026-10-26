@@ -29,11 +29,13 @@ export function Wordmark() {
 }
 
 function useCameraCount() {
-  const [n, setN] = useState<number | null>(() =>
-    typeof navigator !== "undefined" && !navigator.mediaDevices?.enumerateDevices ? 0 : null);
+  const [n, setN] = useState<number | null>(null);
   useEffect(() => {
     const md = navigator.mediaDevices;
-    if (!md?.enumerateDevices) return;
+    if (!md?.enumerateDevices) {
+      Promise.resolve().then(() => setN(0));
+      return;
+    }
     const update = () => md.enumerateDevices().then((d) => setN(d.filter((x) => x.kind === "videoinput").length)).catch(() => setN(0));
     update();
     md.addEventListener?.("devicechange", update);
