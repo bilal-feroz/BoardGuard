@@ -30,3 +30,4 @@ Thumbs.db
 # Test artifacts
 apps/web/test-results/
 apps/web/playwright-report/
+!apps/web/.env.development

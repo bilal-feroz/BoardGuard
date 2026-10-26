@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  BoardGuard - OpenCV 5 vision API + workstation UI on AWS Lambda (container image),
+  private S3 evidence store with automatic expiry, CloudWatch logs. Least-privilege IAM.
+
+Parameters:
+  ImageUri:
+    Type: String
+    Description: ECR image URI (with tag or digest) built from the repository Dockerfile.
+  MemorySize:
+    Type: Number
+    Default: 3008
+    Description: Lambda memory (MB). CPU share scales with memory; OpenCV benefits from >= 2048.
+  MaxConcurrency:
+    Type: Number
+    Default: 5
+    Description: Reserved concurrency cap - bounds cost and abuse of the public demo endpoint.
+  EvidenceRetentionDays:
+    Type: Number
+    Default: 7
+  GitSha:
+    Type: String
+    Default: unknown
+  AllowedOrigin:
+    Type: String
+    Default: "*"
+    Description: CORS origin for the Function URL (the UI is served same-origin, so this only matters for external callers).
+
+Resources:
+  EvidenceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules: [{ ObjectOwnership: BucketOwnerEnforced }]
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-inspection-evidence
+            Status: Enabled
+            Prefix: boardguard/
+            ExpirationInDays: !Ref EvidenceRetentionDays
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-vision
+      RetentionInDays: 14
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: boardguard-least-privilege
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [s3:GetObject, s3:PutObject]
+                Resource: !Sub ${EvidenceBucket.Arn}/boardguard/*
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub ${LogGroup.Arn}:*
+
+  VisionFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroup
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-vision
+      PackageType: Image
+      Code: { ImageUri: !Ref ImageUri }
+      Role: !GetAtt FunctionRole.Arn
+      Architectures: [x86_64]
+      MemorySize: !Ref MemorySize
+      Timeout: 60
+      EphemeralStorage: { Size: 1024 }
+      ReservedConcurrentExecutions: !Ref MaxConcurrency
+      LoggingConfig:
+        LogGroup: !Ref LogGroup
+        LogFormat: Text
+      Environment:
+        Variables:
+          BOARDGUARD_S3_BUCKET: !Ref EvidenceBucket
+          BOARDGUARD_S3_PREFIX: boardguard/
+          BOARDGUARD_RATE_PER_MIN: "60"
+          BOARDGUARD_MAX_UPLOAD_BYTES: "5000000"
+          BOARDGUARD_CORS_ORIGINS: !Ref AllowedOrigin
+          BOARDGUARD_GIT_SHA: !Ref GitSha
+
+  FunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt VisionFunction.Arn
+      AuthType: NONE
+      InvokeMode: BUFFERED
+      Cors:
+        AllowOrigins: [!Ref AllowedOrigin]
+        AllowMethods: [GET, POST]
+        AllowHeaders: [content-type, x-boardguard-key]
+        ExposeHeaders: [x-boardguard-runtime, x-process-time-ms]
+        MaxAge: 600
+
+  FunctionUrlPublicInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref VisionFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+  FunctionUrlPublicInvokeFunction:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref VisionFunction
+      Action: lambda:InvokeFunction
+      Principal: "*"
+      InvokedViaFunctionUrl: true
+
+Outputs:
+  FunctionUrl:
+    Description: Public URL serving the BoardGuard workstation and /api/*.
+    Value: !GetAtt FunctionUrl.FunctionUrl
+  FunctionName:
+    Value: !Ref VisionFunction
+  EvidenceBucketName:
+    Value: !Ref EvidenceBucket
+  LogGroupName:
+    Value: !Ref LogGroup

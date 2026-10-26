@@ -1,0 +1,14 @@
+.git
+**/node_modules
+**/.next
+**/out
+**/.venv
+**/__pycache__
+**/.pytest_cache
+services/vision-api/var
+services/vision-api/tests
+datasets/raw
+docs
+apps/web/test-results
+apps/web/playwright-report
+apps/web/features/board-explorer/__screens__

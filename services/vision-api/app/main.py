@@ -1,4 +1,4 @@
-"""BoardGuard vision API (FastAPI + OpenCV 5)."""
+﻿"""BoardGuard vision API (FastAPI + OpenCV 5)."""
 
 from __future__ import annotations
 
@@ -310,3 +310,11 @@ async def vision_register(reference: UploadFile = File(...), moving: UploadFile 
     reg = {k: v for k, v in reg.items() if not k.startswith("_")}
     return {"registration": reg, "change": change, "duration_ms": round((time.perf_counter() - t0) * 1000, 1),
             "environment": environment()}
+
+
+# ---------------------------------------------------------------- bundled workstation UI (single-origin deployment)
+_static = os.environ.get("BOARDGUARD_STATIC_DIR")
+if _static and Path(_static).is_dir():
+    from fastapi.staticfiles import StaticFiles
+
+    app.mount("/", StaticFiles(directory=_static, html=True), name="ui")
