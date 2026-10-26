@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons";
 import { Badge, Button, fmtMs, fmtPct, KV, Panel, SectionTitle } from "@/components/ui";
 import { apiUrl, type Observation, type Session, type Verification } from "@/lib/api";
@@ -61,12 +61,20 @@ function SplitView({ before, after, alignedUrl }: { before: Observation; after: 
   const [view, setView] = useState<View | null>(null);
   const [pos, setPos] = useState(0.5);
   const wrap = useRef<HTMLDivElement>(null);
+  const [wrapW, setWrapW] = useState(0);
   const dragging = useRef(false);
+  useLayoutEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setWrapW(el.clientWidth));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const onMove = useCallback((clientX: number) => {
     const r = wrap.current?.getBoundingClientRect();
     if (r) setPos(Math.min(1, Math.max(0, (clientX - r.left) / r.width)));
   }, []);
-  const clipX = view && wrap.current ? (pos * wrap.current.clientWidth - view.tx) / view.s : before.width / 2;
+  const clipX = view && wrapW ? (pos * wrapW - view.tx) / view.s : before.width / 2;
   void after;
   return (
     <div ref={wrap} className="relative h-full w-full">

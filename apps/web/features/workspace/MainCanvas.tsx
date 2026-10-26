@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { BoardExplorer } from "@/features/board-explorer";
 import { Icon } from "@/components/icons";
 import { apiUrl } from "@/lib/api";
@@ -8,16 +8,18 @@ import { REGIONS } from "@/lib/regions";
 import { regionStatuses, useStore } from "@/lib/store";
 import MicroscopeView from "../microscope/MicroscopeView";
 
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+
 function usePrefersReducedMotion() {
-  const [r, setR] = useState(false);
-  useEffect(() => {
-    const m = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setR(m.matches);
-    const h = () => setR(m.matches);
-    m.addEventListener("change", h);
-    return () => m.removeEventListener("change", h);
-  }, []);
-  return r;
+  return useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia(RM_QUERY);
+      m.addEventListener("change", cb);
+      return () => m.removeEventListener("change", cb);
+    },
+    () => window.matchMedia(RM_QUERY).matches,
+    () => false,
+  );
 }
 
 export function ProcessingBar() {

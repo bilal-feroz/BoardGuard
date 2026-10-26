@@ -29,10 +29,11 @@ export function Wordmark() {
 }
 
 function useCameraCount() {
-  const [n, setN] = useState<number | null>(null);
+  const [n, setN] = useState<number | null>(() =>
+    typeof navigator !== "undefined" && !navigator.mediaDevices?.enumerateDevices ? 0 : null);
   useEffect(() => {
     const md = navigator.mediaDevices;
-    if (!md?.enumerateDevices) return setN(0);
+    if (!md?.enumerateDevices) return;
     const update = () => md.enumerateDevices().then((d) => setN(d.filter((x) => x.kind === "videoinput").length)).catch(() => setN(0));
     update();
     md.addEventListener?.("devicechange", update);
@@ -107,6 +108,12 @@ export default function TopBar() {
               <a href={api.reportUrl(session.inspection_id, "html")} target="_blank" rel="noreferrer"
                 className="inline-flex h-7 items-center gap-1.5 rounded-[4px] border border-line-strong px-2.5 text-[12px] text-ink hover:bg-raised">
                 <Icon.Report size={14} /> Report
+              </a>
+            </Tooltip>
+            <Tooltip label="Print report / save as PDF" side="bottom">
+              <a href={`${api.reportUrl(session.inspection_id, "html")}?print=1`} target="_blank" rel="noreferrer" aria-label="Save report as PDF"
+                className="mono grid h-7 place-items-center rounded-[4px] border border-line px-1.5 text-[10.5px] text-muted hover:bg-raised hover:text-ink">
+                PDF
               </a>
             </Tooltip>
             <Tooltip label="Download report as JSON" side="bottom">

@@ -53,8 +53,13 @@ export default function ImageCanvas({
   const view = controlled ?? local;
   const drag = useRef<{ x: number; y: number; tx: number; ty: number; moved: boolean } | null>(null);
   const [cursor, setCursor] = useState<[number, number] | null>(null);
-  const [ruler, setRuler] = useState<{ a: [number, number]; b: [number, number]; active: boolean } | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  // Ruler and load state are keyed to the image so they reset without effects when it changes.
+  const rulerKey = `${src}|${measure}`;
+  const [rulerState, setRulerState] = useState<{ key: string; a: [number, number]; b: [number, number]; active: boolean } | null>(null);
+  const ruler = rulerState?.key === rulerKey ? rulerState : null;
+  const setRuler = (r: { a: [number, number]; b: [number, number]; active: boolean } | null) => setRulerState(r ? { ...r, key: rulerKey } : null);
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const loaded = loadedSrc === src;
 
   const setView = useCallback((v: View) => {
     if (onViewChange) onViewChange(v);
@@ -64,9 +69,9 @@ export default function ImageCanvas({
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // ResizeObserver reports the initial size on observe, then every change.
     const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight }));
     ro.observe(el);
-    setSize({ w: el.clientWidth, h: el.clientHeight });
     return () => ro.disconnect();
   }, []);
 
@@ -76,12 +81,11 @@ export default function ImageCanvas({
     const key = `${fitKey ?? src}|${width}x${height}`;
     if (size.w > 0 && size.h > 0 && fittedFor.current !== key) {
       fittedFor.current = key;
+      // Fitting depends on the measured DOM size, so it has to run after layout.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (!controlled || fitKey) setView(fitView(size.w, size.h, width, height));
     }
   }, [size, src, width, height, fitKey, controlled, setView]);
-
-  useEffect(() => setLoaded(false), [src]);
-  useEffect(() => setRuler(null), [src, measure]);
 
   const toImage = useCallback((clientX: number, clientY: number): [number, number] | null => {
     const el = ref.current;
@@ -186,7 +190,7 @@ export default function ImageCanvas({
             src={src}
             alt=""
             draggable={false}
-            onLoad={() => setLoaded(true)}
+            onLoad={() => setLoadedSrc(src)}
             width={width}
             height={height}
             className="absolute inset-0 block max-w-none transition-opacity duration-300"

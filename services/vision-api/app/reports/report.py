@@ -162,6 +162,7 @@ ul{{margin:4px 0;padding-left:18px}} @media print{{body{{padding:0}} h2{{break-a
 <h2>Agent trace</h2><table><tr><th>#</th><th>Time (UTC)</th><th>Actor</th><th>Event</th><th>Tool</th><th>Rule</th><th>Next state</th><th>ms</th></tr>{''.join(rows_t)}</table>
 <h2>Known limitations</h2><ul>{lim}</ul>
 <p class="mono" style="color:var(--muted)">Generated {datetime.now(timezone.utc):%Y-%m-%d %H:%M:%S} UTC by BoardGuard. No technician identity is recorded in the demo; actions are attributed to an unauthenticated user.</p>
+<script>if (new URLSearchParams(location.search).has("print")) addEventListener("load", () => setTimeout(() => print(), 300));</script>
 </body></html>"""
 
 
