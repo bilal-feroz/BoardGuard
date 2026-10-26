@@ -157,7 +157,7 @@ export const useStore = create<State>((set, get) => {
         api.create({ mode: sc.mode, scenario_id: sc.id, board_region: sc.region, board_region_label: regionLabel(sc.region) }),
       );
       if (!created) return;
-      await run(`Processing ${sc.initial}`, () => api.submitFixture(created.inspection_id, sc.initial));
+      await run(`Analysing ${get().fixtures[sc.initial]?.label ?? sc.initial}`, () => api.submitFixture(created.inspection_id, sc.initial));
     },
 
     startCustom: async (mode, regionId) => {
@@ -170,7 +170,7 @@ export const useStore = create<State>((set, get) => {
     submitFixture: async (fixtureId) => {
       const s = get().session;
       if (!s) return;
-      await run(`Processing ${fixtureId}`, () => api.submitFixture(s.inspection_id, fixtureId));
+      await run(`Analysing ${get().fixtures[fixtureId]?.label ?? fixtureId}`, () => api.submitFixture(s.inspection_id, fixtureId));
       set({ canvasMode: "microscope" });
     },
 

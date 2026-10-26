@@ -395,6 +395,16 @@ class Orchestrator:
                 linked.append({"id": f["id"], "type": f["type"], "bbox": pc["mapped_bbox"], "mapped_only": True,
                                "reinspection_outcome": pc["outcome"], "evidence_quality": pc.get("evidence_quality_after"),
                                "polygon": None, "evidence_score": None, "features": {}})
+            rule = {"PERSISTED": "R-M2", "NOT_REPRODUCED": "R-M3"}.get(pc["outcome"], "R-M4")
+            verb = {"PERSISTED": "persisted - priority raised", "NOT_REPRODUCED": "not reproduced - priority lowered"}.get(
+                pc["outcome"], "still inconclusive")
+            self._event(s, kind="decision", title=f"{f['id']} {verb}", rule=rule, obs_id=obs["obs_id"],
+                        inputs={"candidate_id": f["id"], "previous_obs_id": prev["obs_id"]},
+                        observations={"outcome": pc["outcome"], "detail": pc["detail"], "glare_before": pc.get("glare_before"),
+                                      "glare_after": pc.get("glare_after"), "match_iou": pc.get("match_iou"),
+                                      "evidence_score_before": pc.get("evidence_score_before"),
+                                      "evidence_score_after": pc.get("evidence_score_after")},
+                        status="warning" if rule == "R-M4" else "ok")
         # New suspected anomalies that were not visible before.
         for nid in cmp_["new_candidates_unmatched"]:
             nc = new_by_id[nid]

@@ -32,7 +32,7 @@ test("scenario 02: glare triggers recapture, reinspection changes the decision",
   await page.getByRole("button", { name: "Confirm suspicion" }).click();
   await expect(page.getByText(/Electrical verification pending/).first()).toBeVisible();
 
-  await page.getByRole("button", { name: "Evidence" }).click();
+  await page.getByRole("button", { name: "Evidence", exact: true }).click();
   await expect(page.getByText("Evidence chain")).toBeVisible();
   await expect(page.getByText("R-M3").first()).toBeVisible();
   await shot(page, "evidence");
@@ -43,7 +43,7 @@ test("scenario 03: before/after registration and confirmation", async ({ page })
   await expect(page.getByText("After-repair capture")).toBeVisible();
   await page.getByRole("button", { name: /Same region after cleaning/ }).click();
   await expect(page.getByText("Confirm visual checks").first()).toBeVisible();
-  await page.getByRole("button", { name: "Verify" }).click();
+  await page.getByRole("button", { name: "Verify", exact: true }).click();
   await expect(page.getByText("REGISTERED").first()).toBeVisible();
   await page.waitForTimeout(800);
   await shot(page, "verify-split");
@@ -66,14 +66,14 @@ test("scenario 04: unusable capture is rejected before analysis and stops safely
 test("scenario 05: unregistrable real pair withholds the overlay", async ({ page }) => {
   await startScenario(page, "Real rework pair");
   await page.getByRole("button", { name: /PSU section after capacitor replacement/ }).click();
-  await page.getByRole("button", { name: "Verify" }).click();
+  await page.getByRole("button", { name: "Verify", exact: true }).click();
   await expect(page.getByText(/Registration failed — aligned overlay and change map withheld/)).toBeVisible();
   await shot(page, "verify-withheld");
 });
 
 test("system screen shows live OpenCV 5 runtime", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "System" }).click();
+  await page.getByRole("button", { name: "System", exact: true }).click();
   await expect(page.getByText(/^5\.\d+\.\d+ \(opencv-python-headless\)/)).toBeVisible();
   await page.getByRole("button", { name: "Run probe" }).click();
   await expect(page.getByText("X-BoardGuard-Runtime")).toBeVisible();

@@ -107,7 +107,7 @@ export default function MicroscopeView({ obs }: { obs: Observation }) {
               <span style={{ color: sel ? undefined : color }}>{c.id}</span>
               <span className={sel ? "" : "text-muted"}>{TYPE_SHORT[c.type]}</span>
               {c.mapped_only ? <span className={sel ? "" : "text-muted"}>mapped · {c.reinspection_outcome?.toLowerCase().replace("_", " ")}</span>
-                : insufficient ? <span style={{ color: sel ? undefined : "#D8AA68" }}>evidence ✕</span> : null}
+                : insufficient ? <span style={{ color: sel ? undefined : "#D8AA68" }}>insufficient evidence</span> : null}
             </button>
           );
         })

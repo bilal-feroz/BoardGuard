@@ -108,7 +108,7 @@ def assess_image_quality(ctx: ToolContext, observation_id: str, roi=None) -> dic
     img = ctx.image(observation_id)
     q = quality.assess_image_quality(img, roi=tuple(roi) if roi else None)
     ctx._glare[observation_id] = q["_glare_mask"]
-    overlay = mask_to_rgba(q["_glare_mask"], (230, 240, 250), 200)
+    overlay = mask_to_rgba(q["_glare_mask"], (104, 170, 216), 190)  # amber: evidence compromised by glare
     key = ctx.put_artifact(f"{observation_id}_glare.png", encode_png(overlay), "image/png")
     out = quality.public(q)
     out["glare_overlay_key"] = key
