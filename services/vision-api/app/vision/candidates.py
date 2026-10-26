@@ -37,11 +37,11 @@ PARAMS = {
     "dog_sigma_fine": 1.0,
     "dog_sigma_coarse": 3.0,
     "texture_window": 15,
-    "texture_lo": 3.0,  # DoG local RMS where texture cue starts
-    "texture_hi": 9.0,  # ... and saturates
+    "texture_lo": 2.0,  # DoG local RMS where texture cue starts
+    "texture_hi": 6.5,  # ... and saturates
     "coherence_max": 0.55,  # above: oriented structure (edge/trace), not crust
-    "corrosion_threshold": 0.42,
-    "corrosion_min_area_frac": 0.0012,
+    "corrosion_threshold": 0.36,
+    "corrosion_min_area_frac": 0.002,
     "corrosion_max_candidates": 8,
     "metal_chroma_max": 30.0,
     "metal_l_local_delta": 18.0,
@@ -50,6 +50,7 @@ PARAMS = {
     "row_min_leads": 4,
     "merge_width_ratio": 1.65,
     "gap_z_threshold": 3.5,
+    "min_lead_width_px": 7,
 }
 
 
@@ -62,7 +63,7 @@ def _texture_maps(gray: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     g = gray.astype(np.float32)
     dog = cv2.GaussianBlur(g, (0, 0), PARAMS["dog_sigma_fine"]) - cv2.GaussianBlur(g, (0, 0), PARAMS["dog_sigma_coarse"])
     k = PARAMS["texture_window"]
-    energy = np.sqrt(cv2.blur(dog * dog, (k, k)))
+    energy = np.sqrt(np.maximum(cv2.blur(dog * dog, (k, k)), 0))
     gx = cv2.Sobel(g, cv2.CV_32F, 1, 0, ksize=3)
     gy = cv2.Sobel(g, cv2.CV_32F, 0, 1, ksize=3)
     jxx = cv2.blur(gx * gx, (k, k))
@@ -81,11 +82,11 @@ def _corrosion_color_cues(bgr: np.ndarray) -> dict[str, np.ndarray]:
     L, a, b = lab[:, :, 0], lab[:, :, 1] - 128.0, lab[:, :, 2] - 128.0
     # Blue-green copper salts (verdigris / copper chloride): cyan-teal hue,
     # cooler than typical green solder mask (b* low or negative).
-    hue_teal = np.exp(-((h - 90.0) ** 2) / (2 * 11.0 ** 2))
-    verdigris = hue_teal * _smoothstep(s, 35, 90) * _smoothstep(v, 70, 130) * _smoothstep(-b, -6, 8)
+    hue_teal = np.exp(-((h - 90.0) ** 2) / (2 * 15.0 ** 2))
+    verdigris = hue_teal * _smoothstep(s, 25, 70) * _smoothstep(v, 60, 120) * _smoothstep(-b, -6, 8)
     # Whitish / pale crust: low chroma, mid-high lightness (not specular).
     chroma = np.sqrt(a * a + b * b)
-    crust = _smoothstep(L, 140, 185) * (1.0 - _smoothstep(chroma, 10, 24)) * (1.0 - _smoothstep(v, 238, 252))
+    crust = _smoothstep(L, 160, 190) * (1.0 - _smoothstep(chroma, 10, 22)) * (1.0 - _smoothstep(v, 238, 252))
     # Brown/rust staining: warm, moderately saturated, mid-dark.
     hue_brown = np.exp(-((h - 14.0) ** 2) / (2 * 6.0 ** 2))
     stain = hue_brown * _smoothstep(s, 70, 130) * _smoothstep(v, 45, 80) * (1.0 - _smoothstep(v, 150, 200))
@@ -97,8 +98,13 @@ def detect_corrosion(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) -> tu
     energy, coherence = _texture_maps(gray)
     texture = _smoothstep(energy, PARAMS["texture_lo"], PARAMS["texture_hi"]) * (1.0 - _smoothstep(coherence, 0.35, PARAMS["coherence_max"] + 0.2))
     cues = _corrosion_color_cues(bgr)
-    color = np.maximum(np.maximum(cues["verdigris"], cues["crust"]), cues["stain"])
-    score = color * (0.15 + 0.85 * texture)
+    # Brown staining is measured and reported but does not raise candidates on its own: on brown
+    # phenolic boards, copper and capacitor bodies it was indistinguishable from damage (see evaluation).
+    # Pale crust on metallic surfaces (tin end caps, IC leads) is down-weighted for the same reason.
+    metal = metallic_mask(bgr, glare) > 0
+    crust_eff = np.where(metal, cues["crust"] * 0.35, cues["crust"])
+    color = np.maximum(cues["verdigris"], crust_eff)
+    score = color * (0.3 + 0.7 * texture)
     score[glare > 0] = 0.0
     score = cv2.GaussianBlur(score, (0, 0), 2.0)
     mask = (score >= PARAMS["corrosion_threshold"]).astype(np.uint8) * 255
@@ -118,14 +124,25 @@ def detect_corrosion(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) -> tu
         hull_area = max(1.0, cv2.contourArea(cv2.convexHull(cnt)))
         perim = cv2.arcLength(cnt, True)
         sel = labels == i
+        # Corrosion crust is textured throughout; smooth objects (solder, pads) only have textured edges.
+        interior = cv2.erode(sel.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))) > 0
+        interior_energy = float(energy[interior].mean()) if np.count_nonzero(interior) >= 20 else float(energy[sel].mean())
+        mean_l = float(gray[sel].mean())
+        if interior_energy < PARAMS["texture_lo"] * 1.5 and mean_l > 150:
+            continue
         cue_means = {k: float(c[sel].mean()) for k, c in cues.items()}
-        dominant = max(cue_means, key=cue_means.get)
+        dominant = "verdigris" if cue_means["verdigris"] >= 0.6 * cue_means["crust"] else "crust"
+        metal_frac = float(metal[sel].mean())
+        if dominant == "crust" and (metal_frac > 0.5 or interior_energy < 6.0):
+            continue
         tex = float(texture[sel].mean())
         col = float(color[sel].mean())
         coh = float(coherence[sel].mean())
         solidity = float(area / hull_area)
         irregularity = float(perim * perim / (4 * math.pi * area))
         evidence = float(np.clip(0.45 * col + 0.4 * tex + 0.15 * min(1.0, (irregularity - 1) / 4), 0, 1))
+        if dominant == "crust":
+            evidence *= 0.8  # pale crust is the less specific appearance
         eps = 0.01 * perim
         poly = cv2.approxPolyDP(cnt, eps, True).reshape(-1, 2).tolist()
         out.append({
@@ -140,8 +157,10 @@ def detect_corrosion(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) -> tu
                 "colour_cue": round(col, 3),
                 "texture_cue": round(tex, 3),
                 "mean_dog_energy": round(float(energy[sel].mean()), 2),
+                "interior_dog_energy": round(interior_energy, 2),
                 "structure_coherence": round(coh, 3),
                 "solidity": round(solidity, 3),
+                "metallic_fraction": round(metal_frac, 3),
                 "boundary_irregularity": round(irregularity, 2),
                 **{f"cue_{k}": round(v, 3) for k, v in cue_means.items()},
             },
@@ -242,6 +261,11 @@ def detect_solder_bridges(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) 
             # Real IC lead rows have a regular pitch; reject irregular groupings (e.g. passive end caps).
             if len(regular) < PARAMS["row_min_leads"] - 1 or float(np.std(regular)) > 0.12 * pitch:
                 continue
+            row_len = float(np.median([leads[j]["length"] for j in idx]))
+            row_w = float(np.median(widths))
+            # IC lead geometry: leads are longer than the pitch and narrower than it.
+            if row_len < 1.1 * pitch or row_w > 0.8 * pitch or pitch < 6:
+                continue
             rows.append({
                 "u": u, "v": v,
                 "u_center": float(np.median([leads[j]["cx"] * u[0] + leads[j]["cy"] * u[1] for j in idx])),
@@ -274,7 +298,7 @@ def detect_solder_bridges(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) 
             span = hi - lo
             ratio = span / max(row["lead_width"], 1e-3)
             ulo, uhi = _extent(c["cnt"], u)
-            if ratio >= PARAMS["merge_width_ratio"] and span >= row["pitch"] * 0.95 and (uhi - ulo) >= 0.35 * row["lead_length"]:
+            if ratio >= PARAMS["merge_width_ratio"] and row["pitch"] * 0.95 <= span <= row["pitch"] * 3.2 and (uhi - ulo) >= 0.35 * row["lead_length"]:
                 x, y, w, h = cv2.boundingRect(c["cnt"].astype(np.int32))
                 candidates.append(_bridge_candidate(x, y, w, h, r_i, row, {
                     "mechanism": "merged_leads",
@@ -368,6 +392,8 @@ def detect_visual_candidates(bgr: np.ndarray, roi: tuple[int, int, int, int] | N
     gray = cv2.cvtColor(view, cv2.COLOR_BGR2GRAY)
     corrosion, corr_mask = detect_corrosion(view, gview, gray)
     bridges, metal_mask, rows = detect_solder_bridges(view, gview, gray)
+    # A blob explained by a lead-row bridge analysis is not also reported as corrosion.
+    corrosion = [c for c in corrosion if all(_iou(c["bbox"], b["bbox"]) < 0.25 for b in bridges)]
     cands = corrosion + bridges
     for c in cands:
         c["bbox"][0] += ox
@@ -378,6 +404,12 @@ def detect_visual_candidates(bgr: np.ndarray, roi: tuple[int, int, int, int] | N
         bw, bh = min(W - bx, bw), min(H - by, bh)
         c["bbox"] = [bx, by, bw, bh]
         c["evidence_quality"] = assess_region(bgr, (bx, by, bw, bh), glare_mask=glare)
+        lw = c["features"].get("row_lead_width_px")
+        if c["type"] == "suspected_solder_bridge" and lw is not None and lw < PARAMS["min_lead_width_px"]:
+            c["evidence_quality"]["issues"].append({
+                "code": "RESOLUTION",
+                "detail": f"Leads are only {lw:.0f} px wide; at least {PARAMS['min_lead_width_px']} px is needed to judge a bridge."})
+            c["evidence_quality"]["sufficient"] = False
     cands.sort(key=lambda c: (c["type"] != "suspected_solder_bridge", -c["evidence_score"]))
     for i, c in enumerate(cands):
         c["id"] = f"C{i + 1:02d}"

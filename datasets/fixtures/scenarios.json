@@ -1,0 +1,218 @@
+{
+ "scenarios": [
+  {
+   "id": "S01-corrosion",
+   "number": "01",
+   "title": "Suspected corrosion",
+   "mode": "inspection",
+   "region": "REGION-A",
+   "purpose": "Real battery-leak damage. OpenCV localises blue-green deposits; the agent hands each finding to the technician.",
+   "initial": "s01_battery_leak",
+   "next_captures": []
+  },
+  {
+   "id": "S02-bridge-glare",
+   "number": "02",
+   "title": "Possible solder bridge under glare",
+   "mode": "inspection",
+   "region": "REGION-B",
+   "purpose": "Glare on a TQFP lead row looks like a bridge. The agent refuses to decide, requests diffuse light, then re-evaluates.",
+   "initial": "s02_tqfp_ringlight",
+   "next_captures": [
+    {
+     "fixture_id": "s02_tqfp_diffuse",
+     "hint": "Recapture with diffuse illumination, same framing."
+    },
+    {
+     "fixture_id": "s02_wrong_field",
+     "hint": "Wrong field of view - shows that unregistrable captures are not compared."
+    }
+   ]
+  },
+  {
+   "id": "S03-verification",
+   "number": "03",
+   "title": "Before / after verification",
+   "mode": "verification",
+   "region": "REGION-C",
+   "purpose": "Register a before and after capture, map visible change to findings, and keep electrical verification with the technician.",
+   "initial": "s03_before_corroded",
+   "next_captures": [
+    {
+     "fixture_id": "s03_after_cleaned_synthetic",
+     "hint": "After cleaning (synthetic fixture, re-framed)."
+    },
+    {
+     "fixture_id": "s03_wrong_region",
+     "hint": "Wrong region - registration must fail and overlays be withheld."
+    }
+   ]
+  },
+  {
+   "id": "S04-unusable",
+   "number": "04",
+   "title": "Unusable capture",
+   "mode": "inspection",
+   "region": "REGION-E",
+   "purpose": "Real flash-lit photo with clipped highlights. The quality gate rejects it before any defect analysis.",
+   "initial": "s04_overexposed",
+   "next_captures": []
+  },
+  {
+   "id": "S05-real-rework",
+   "number": "05",
+   "title": "Real rework pair, different framing",
+   "mode": "verification",
+   "region": "REGION-D",
+   "purpose": "Genuine before/after capacitor replacement shot from different angles: BoardGuard declines to overlay it.",
+   "initial": "s05_psu_before",
+   "next_captures": [
+    {
+     "fixture_id": "s05_psu_after",
+     "hint": "Real after-rework photo (different angle and framing)."
+    }
+   ]
+  }
+ ],
+ "fixtures": {
+  "s01_battery_leak": {
+   "file": "images/s01_battery_leak.jpg",
+   "label": "Leaked NiCd cell beside DIP IC and header",
+   "provenance": "Recorded photograph (real corrosion from a leaked battery).",
+   "synthetic": false,
+   "width": 1600,
+   "height": 1200,
+   "license": "CC BY-SA 2.0",
+   "attribution": "John R. Southern / Wikimedia Commons / CC BY-SA 2.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:NiCd_VARTA_battery_leakage_on_circuit_board_(IMG_3313).jpg",
+   "source_file": "corrosion/corrosion_01_nicd-leak-korg-poly61.jpg"
+  },
+  "s02_tqfp_ringlight": {
+   "file": "images/s02_tqfp_ringlight.jpg",
+   "label": "TQFP-144 under ring light (specular glare on right lead row)",
+   "provenance": "SYNTHETIC: specular highlight (Gaussian, r=50 px) added with OpenCV to a real photograph to emulate ring-light glare.",
+   "synthetic": true,
+   "width": 1597,
+   "height": 1600,
+   "license": "CC BY-SA 4.0",
+   "attribution": "Phiarc / Wikimedia Commons / CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Xilinx_Spartan_XC2S100.jpg",
+   "source_file": "fine_pitch/fine_pitch_01_tqfp144-xilinx-topdown.jpg",
+   "derived_from": "s02_tqfp_diffuse"
+  },
+  "s02_tqfp_diffuse": {
+   "file": "images/s02_tqfp_diffuse.jpg",
+   "label": "TQFP-144 recaptured with diffuse light",
+   "provenance": "Recorded photograph (real TQFP-144, 0.5 mm pitch, no glare).",
+   "synthetic": false,
+   "width": 1597,
+   "height": 1600,
+   "license": "CC BY-SA 4.0",
+   "attribution": "Phiarc / Wikimedia Commons / CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Xilinx_Spartan_XC2S100.jpg",
+   "source_file": "fine_pitch/fine_pitch_01_tqfp144-xilinx-topdown.jpg"
+  },
+  "s02_wrong_field": {
+   "file": "images/s02_wrong_field.jpg",
+   "label": "Different board (TQFP-64) - wrong field of view",
+   "provenance": "Recorded photograph of a different board; used to show that unregistrable recaptures are not compared.",
+   "synthetic": false,
+   "width": 1600,
+   "height": 1600,
+   "license": "CC BY-SA 4.0",
+   "attribution": "Raimond Spekking / Wikimedia Commons / CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Logitech_Harmony_300_-_board_-_Microchip_PIC18F67J50-41368.jpg",
+   "source_file": "fine_pitch/fine_pitch_02_tqfp64-pic18-topdown.jpg"
+  },
+  "s03_before_corroded": {
+   "file": "images/s03_before_corroded.jpg",
+   "label": "IC socket pins with green corrosion (before cleaning)",
+   "provenance": "Recorded photograph (real corrosion on IC legs and socket contacts).",
+   "synthetic": false,
+   "width": 1600,
+   "height": 1200,
+   "license": "CC BY-SA 3.0",
+   "attribution": "Binarysequence / Wikimedia Commons / CC BY-SA 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:PCB_corrosion.jpg",
+   "source_file": "corrosion/corrosion_02_nicd-leak-ic-socket-pins.jpg"
+  },
+  "s03_after_cleaned_synthetic": {
+   "file": "images/s03_after_cleaned_synthetic.jpg",
+   "label": "Same region after cleaning (synthetic fixture)",
+   "provenance": "SYNTHETIC verification fixture: the detected deposit was removed digitally with cv2.inpaint and the view re-framed by a known homography (2.5 deg, 0.97x, shift) with +6% gain. It does not depict a physical repair.",
+   "synthetic": true,
+   "width": 1600,
+   "height": 1200,
+   "license": "CC BY-SA 3.0",
+   "attribution": "Binarysequence / Wikimedia Commons / CC BY-SA 3.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:PCB_corrosion.jpg",
+   "source_file": "corrosion/corrosion_02_nicd-leak-ic-socket-pins.jpg",
+   "derived_from": "s03_before_corroded",
+   "ground_truth_homography": [
+    [
+     0.984774,
+     -0.051035,
+     70.801775
+    ],
+    [
+     0.053345,
+     0.962944,
+     -38.442239
+    ],
+    [
+     1.9e-05,
+     -1.1e-05,
+     0.991155
+    ]
+   ]
+  },
+  "s03_wrong_region": {
+   "file": "images/s03_wrong_region.jpg",
+   "label": "Unrelated board area - wrong field of view",
+   "provenance": "Recorded photograph of a different board; registration must fail and the comparison must be withheld.",
+   "synthetic": false,
+   "width": 1600,
+   "height": 1064,
+   "license": "CC BY-SA 4.0",
+   "attribution": "VSchagow / Wikimedia Commons / CC BY-SA 4.0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:2021111403_Detail_Festplattenplatine_Western_Digital_40_GB_2021.jpg",
+   "source_file": "clean/clean_08_hdd-pcb-traces-testpoints.jpg"
+  },
+  "s04_overexposed": {
+   "file": "images/s04_overexposed.jpg",
+   "label": "Battery-leak area photographed with flash (blown highlights)",
+   "provenance": "Recorded photograph (real) with strong flash glare and clipped highlights.",
+   "synthetic": false,
+   "width": 1600,
+   "height": 1142,
+   "license": "CC0",
+   "attribution": "Oligopolism / Wikimedia Commons / CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Motherboard_Battery_Corrosion.jpg",
+   "source_file": "corrosion/corrosion_04_386-motherboard-battery-leak.jpg"
+  },
+  "s05_psu_before": {
+   "file": "images/s05_psu_before.jpg",
+   "label": "PSU section before capacitor replacement",
+   "provenance": "Recorded photograph (real) of a power-supply section before rework.",
+   "synthetic": false,
+   "width": 1600,
+   "height": 1067,
+   "license": "CC0",
+   "attribution": "Retired electrician / Wikimedia Commons / CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Sharp_Optonica_SA-2121H_receiver_original_Nichicon_blue_caps_02.jpg",
+   "source_file": "pairs/pairs_01_sharp-psu-before-closeup.jpg"
+  },
+  "s05_psu_after": {
+   "file": "images/s05_psu_after.jpg",
+   "label": "PSU section after capacitor replacement (different angle and framing)",
+   "provenance": "Recorded photograph (real) of the same section after rework, shot from a different angle with re-routed wiring.",
+   "synthetic": false,
+   "width": 1600,
+   "height": 1067,
+   "license": "CC0",
+   "attribution": "Retired electrician / Wikimedia Commons / CC0",
+   "source_url": "https://commons.wikimedia.org/wiki/File:Sharp_Optonica_SA-2121H_receiver_replacement_Nichicon_KZ_caps_01.jpg",
+   "source_file": "pairs/pairs_02_sharp-psu-after-closeup.jpg"
+  }
+ }
+}

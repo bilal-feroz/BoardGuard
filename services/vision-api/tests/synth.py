@@ -1,4 +1,4 @@
-"""Deterministic synthetic PCB renderings with exact ground truth.
+﻿"""Deterministic synthetic PCB renderings with exact ground truth.
 
 Used ONLY for unit tests and the synthetic part of the evaluation suite. Every
 image produced here is labelled synthetic wherever it is used.
@@ -12,7 +12,9 @@ import numpy as np
 
 def render_board(seed: int = 0, size=(900, 1200), bridge: bool = False, corrosion: bool = False,
                  glare_at: tuple[int, int] | None = None, glare_radius: int = 70, blur_sigma: float = 0.0,
-                 leads_per_row: int = 16) -> tuple[np.ndarray, dict]:
+                 leads_per_row: int = 16, bridge_index: int = 7, bridge_row: str = "bottom",
+                 corrosion_center: tuple[int, int] = (190, 470), corrosion_radius: int = 70,
+                 corrosion_bgr: tuple[int, int, int] = (176, 170, 96)) -> tuple[np.ndarray, dict]:
     rng = np.random.default_rng(seed)
     h, w = size
     img = np.zeros((h, w, 3), np.uint8)
@@ -43,12 +45,12 @@ def render_board(seed: int = 0, size=(900, 1200), bridge: bool = False, corrosio
             cv2.rectangle(img, (lx + 2, ly + 4), (lx + lw - 3, ly + ll - 6), (214, 216, 218), -1)
             leads.append((row, i, lx, ly))
     if bridge:
-        _, i, lx, ly = [l for l in leads if l[0] == "bottom"][7]
+        _, i, lx, ly = [l for l in leads if l[0] == bridge_row][bridge_index]
         bx0, by0, bx1, by1 = lx + lw - 1, ly + 12, lx + pitch + 1, ly + 34
         cv2.rectangle(img, (bx0, by0), (bx1, by1), (200, 202, 204), -1)
         gt["bridges"].append([lx, ly, pitch + lw, ll])
     if corrosion:
-        cx, cy, r = 190, 470, 70
+        (cx, cy), r = corrosion_center, corrosion_radius
         blob = np.zeros((h, w), np.uint8)
         pts = []
         for a in np.linspace(0, 2 * np.pi, 18, endpoint=False):
@@ -57,7 +59,7 @@ def render_board(seed: int = 0, size=(900, 1200), bridge: bool = False, corrosio
         cv2.fillPoly(blob, [np.int32(pts)], 255)
         grain = rng.random((h, w))
         tex = np.zeros_like(img)
-        tex[:] = (176, 170, 96)  # teal / verdigris BGR
+        tex[:] = corrosion_bgr  # teal / verdigris BGR by default
         pale = np.full_like(img, 205)
         mix = np.where((grain > 0.55)[..., None], pale, tex)
         mix = cv2.GaussianBlur(mix, (3, 3), 0)

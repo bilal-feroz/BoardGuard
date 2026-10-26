@@ -1,4 +1,4 @@
-// Inspection regions on the representational 3D logic board.
+﻿// Inspection regions on the representational 3D logic board.
 //
 // The 3D board is a generic, procedurally modelled assembly. It is NOT a scan
 // of the boards in the demo images; regions are grounded data objects that
@@ -25,8 +25,8 @@ export const BOARD_SIZE_MM = { width: 150, height: 80, thickness: 1.0 };
 export const REGIONS: BoardRegion[] = [
   {
     id: "REGION-A",
-    label: "Board-to-board connector",
-    description: "Fine-pitch FPC connector near the battery edge; common site of liquid ingress.",
+    label: "Battery & connector area",
+    description: "Backup cell and board-to-board connector near the edge; common site of battery leakage and liquid ingress.",
     u: 0.16, v: 0.3, w: 0.16, h: 0.09,
     scenarioId: "S01-corrosion",
   },
@@ -40,20 +40,22 @@ export const REGIONS: BoardRegion[] = [
   {
     id: "REGION-C",
     label: "Exposed trace & test pads",
-    description: "Test pads and an exposed trace run used for before/after cleaning verification.",
+    description: "IC socket, test pads and an exposed trace run; used for before/after cleaning verification.",
     u: 0.8, v: 0.68, w: 0.17, h: 0.16,
     scenarioId: "S03-verification",
   },
   {
     id: "REGION-D",
     label: "Power management cluster",
-    description: "PMIC with dense 0201/0402 passives. No scenario attached.",
+    description: "PMIC, bulk capacitors and dense passives; rework (capacitor replacement) happens here.",
     u: 0.78, v: 0.27, w: 0.16, h: 0.18,
+    scenarioId: "S05-real-rework",
   },
   {
     id: "REGION-E",
     label: "Shielded RF section",
-    description: "Stamped shield can over the RF front end. No scenario attached.",
+    description: "Stamped shield can over the RF front end; reflective metal that easily blows out flash captures.",
     u: 0.24, v: 0.72, w: 0.2, h: 0.2,
+    scenarioId: "S04-unusable",
   },
 ];

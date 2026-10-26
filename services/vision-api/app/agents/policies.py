@@ -1,4 +1,4 @@
-"""Decision policies for the inspection agent.
+﻿"""Decision policies for the inspection agent.
 
 Pure functions: they take measured vision outputs and return a decision with
 the rule that fired. Keeping them free of I/O makes every transition unit
@@ -52,6 +52,8 @@ def recapture_instruction(issues: list[dict], region_label: str, candidate_type:
         parts.append("Increase illumination or exposure")
     if "OVEREXPOSED" in codes:
         parts.append("Reduce illumination or exposure to stop highlights clipping")
+    if "RESOLUTION" in codes:
+        parts.append(f"Increase optical magnification on {region_label} so each lead spans at least 8 pixels")
     if "TOO_SMALL" in codes:
         parts.append("Capture at a higher resolution or magnification")
     if "LOW_CONTRAST" in codes:
