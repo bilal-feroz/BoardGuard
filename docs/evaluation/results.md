@@ -1,6 +1,6 @@
 # BoardGuard evaluation results
 
-Generated 2026-10-26 17:17 UTC with OpenCV 5.0.0 (local · Windows 10 · Python 3.11.9) in 254.2 s.
+Generated 2026-10-26 17:28 UTC with OpenCV 5.0.0 (local · Windows 10 · Python 3.11.9) in 229.3 s.
 
 Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 
@@ -17,10 +17,10 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | flagged: blur_s1.5 | 96.3 % |
 | flagged: blur_s3 | 100.0 % |
 | flagged: blur_s5 | 100.0 % |
-| flagged: glare | 70.4 % |
+| flagged: glare | 100.0 % |
 | flagged: dark | 100.0 % |
 | flagged: bright | 100.0 % |
-| originals ACCEPT/MARGINAL/REJECT | 18/6/3 |
+| originals ACCEPT/MARGINAL/REJECT | 17/7/3 |
 
 | image | original verdict | blur metric | blur metric @ sigma 3 |
 |---|---|---|---|
@@ -43,7 +43,7 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | clean/clean_02_microscope-msop10-passives.jpg | MARGINAL | 0.206 | 0.714 |
 | clean/clean_03_lqfp48-infineon-router-board.jpg | MARGINAL | 0.277 | 0.742 |
 | clean/clean_04_mlcc-capacitors-macro.jpg | ACCEPT | 0.275 | 0.79 |
-| clean/clean_05_mlcc-led-macro-1mm-scalebar.jpg | ACCEPT | 0.219 | 0.746 |
+| clean/clean_05_mlcc-led-macro-1mm-scalebar.jpg | MARGINAL | 0.219 | 0.746 |
 | clean/clean_06_soic8-opamps-black-pcb.jpg | ACCEPT | 0.402 | 0.77 |
 | clean/clean_07_qfn60-rp2350-pico2.jpg | MARGINAL | 0.353 | 0.741 |
 | clean/clean_08_hdd-pcb-traces-testpoints.jpg | ACCEPT | 0.327 | 0.72 |
@@ -54,17 +54,9 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 
 **Failure cases / limitations**
 
-- glare degradation of corrosion/corrosion_03_polysix-battery-trace-damage.jpg not flagged as GLARE (verdict ACCEPT, blur 0.33, glare 0.028).
 - Original corrosion/corrosion_04_386-motherboard-battery-leak.jpg rejected (OVEREXPOSED, GLARE); no ground truth that it is usable - review manually.
-- glare degradation of corrosion/corrosion_06_hdd-pcb-oxidized-pads-subtle.jpg not flagged as GLARE (verdict ACCEPT, blur 0.26, glare 0.028).
-- glare degradation of corrosion/corrosion_07_nicd-button-cell-terminal.jpg not flagged as GLARE (verdict ACCEPT, blur 0.41, glare 0.013).
-- glare degradation of fine_pitch/fine_pitch_04_hsop-wave-solder-thieves.jpg not flagged as GLARE (verdict ACCEPT, blur 0.35, glare 0.028).
 - Original fine_pitch/fine_pitch_08_solder-bridge-genuine-lowres.jpg rejected (TOO_SMALL); no ground truth that it is usable - review manually.
-- glare degradation of fine_pitch/fine_pitch_08_solder-bridge-genuine-lowres.jpg not flagged as GLARE (verdict REJECT, blur 0.23, glare 0.012).
 - Original clean/clean_01_microscope-smd-glare-shield.jpg rejected (OVEREXPOSED, GLARE); no ground truth that it is usable - review manually.
-- glare degradation of pairs/pairs_01_sharp-psu-before-closeup.jpg not flagged as GLARE (verdict ACCEPT, blur 0.37, glare 0.021).
-- glare degradation of pairs/pairs_03_sharp-psu-before-wide.jpg not flagged as GLARE (verdict ACCEPT, blur 0.29, glare 0.018).
-- glare degradation of pairs/pairs_04_sharp-psu-after-wide.jpg not flagged as GLARE (verdict ACCEPT, blur 0.28, glare 0.033).
 
 ## Candidate localisation
 
@@ -78,7 +70,7 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | bridge recall | 1.0 |
 | corrosion precision | 1.0 |
 | corrosion recall | 0.792 |
-| median detection time | 587.8 ms |
+| median detection time | 395.6 ms |
 | real 'clean': images with corrosion cand. | 1/8 |
 | real 'corrosion': images with corrosion cand. | 4/7 |
 | real 'fine_pitch': images with corrosion cand. | 1/8 |
@@ -127,7 +119,7 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 
 **Method.** Each real photograph is warped by a random plausible homography (rotation <= 8 deg, scale +/- 8 %, shift <= 4 % width, mild perspective) plus gain/offset change; error = max distance between estimated and true image-corner positions. Negative pairs are consecutive unrelated photographs.
 
-**Data.** 27 real photographs x 3 warps; 27 unrelated pairs.
+**Data.** 27 real photographs x 3 warps; 23 unrelated pairs.
 
 | Metric | Value |
 |---|---|
@@ -135,8 +127,8 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | registered (REGISTERED/WEAK) | 100.0 % |
 | median max-corner error | 0.09 px |
 | worst max-corner error | 0.52 px |
-| unrelated pairs correctly FAILED | 26/27 |
-| median registration time | 356.0 ms |
+| unrelated pairs correctly FAILED | 23/23 |
+| median registration time | 403.8 ms |
 
 | image | warp | status | inliers | inlier ratio | RMS px | corner err px |
 |---|---|---|---|---|---|---|
@@ -222,10 +214,6 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | pairs/pairs_04_sharp-psu-after-wide.jpg | 1 | REGISTERED | 2360 | 0.961 | 0.45 | 0.07 |
 | pairs/pairs_04_sharp-psu-after-wide.jpg | 2 | REGISTERED | 2334 | 0.957 | 0.44 | 0.07 |
 
-**Failure cases / limitations**
-
-- Unrelated pair fine_pitch/fine_pitch_06_lqfp48-realtek-angle-a.jpg / fine_pitch/fine_pitch_07_lqfp48-realtek-angle-b.jpg accepted as REGISTERED (344 inliers).
-
 ## Change detection after registration
 
 **Method.** Synthetic before/after pairs where a solder bridge (and, in half the pairs, a corrosion deposit) is removed and the after view is re-framed by a random homography. A removed defect counts as found when >3 % of its box is marked changed. Control: the same image re-framed with no content change.
@@ -237,7 +225,7 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | removed defects marked changed | 22/22 |
 | spurious regions on no-change controls | 0 |
 | mean changed fraction on controls | 0.0 % |
-| median change-map time | 826.0 ms |
+| median change-map time | 813.2 ms |
 
 **Failure cases / limitations**
 
@@ -280,8 +268,8 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 
 | Metric | Value |
 |---|---|
-| quality median | 161.8 ms |
-| quality p95 | 222.7 ms |
-| candidates median | 602.6 ms |
-| candidates p95 | 1336.2 ms |
-| typical working size | 1600x1200 |
+| quality median | 180.3 ms |
+| quality p95 | 265.8 ms |
+| candidates median | 623.1 ms |
+| candidates p95 | 1280.7 ms |
+| typical working size | 1600x1067 |
