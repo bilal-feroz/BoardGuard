@@ -68,13 +68,25 @@ def compute_change_map(ref_bgr: np.ndarray, warped_bgr: np.ndarray, valid: np.nd
     t = PARAMS["shift_tolerance_px"]
     ref_s = cv2.GaussianBlur(ref_lab, (0, 0), 1.0)
     mov_s = cv2.GaussianBlur(mov_lab, (0, 0), 1.0)
-    best = np.full((H, W), np.inf, np.float32)
     padded = cv2.copyMakeBorder(mov_s, t, t, t, t, cv2.BORDER_REPLICATE)
+    # Minimum squared Lab distance over the shifts, on contiguous channel planes with reused buffers;
+    # sqrt is monotonic, so one sqrt of the minimum equals the minimum of per-shift distances.
+    ref_planes = cv2.split(ref_s)
+    mov_planes = cv2.split(padded)
+    best2 = np.full((H, W), np.inf, np.float32)
+    d2 = np.empty((H, W), np.float32)
+    tmp = np.empty((H, W), np.float32)
     for dy in range(-t, t + 1):
         for dx in range(-t, t + 1):
-            shifted = padded[t + dy:t + dy + H, t + dx:t + dx + W]
-            d = np.sqrt(np.sum((ref_s - shifted) ** 2, axis=2))
-            np.minimum(best, d, out=best)
+            for c in range(3):
+                np.subtract(ref_planes[c], mov_planes[c][t + dy:t + dy + H, t + dx:t + dx + W], out=tmp)
+                np.multiply(tmp, tmp, out=tmp)
+                if c == 0:
+                    d2[...] = tmp
+                else:
+                    np.add(d2, tmp, out=d2)
+            np.minimum(best2, d2, out=best2)
+    best = np.sqrt(best2)
     colour = np.clip(best / PARAMS["colour_scale"], 0, 1)
 
     ssim = _ssim_map(ref_lab[:, :, 0], mov_lab[:, :, 0], PARAMS["ssim_sigma"])
@@ -140,4 +152,5 @@ def render_heatmap(change: np.ndarray, valid: np.ndarray) -> np.ndarray:
     out[:, :, 1] = (150 + 20 * a).astype(np.uint8)
     out[:, :, 2] = 216
     out[:, :, 3] = alpha
+    out[alpha == 0] = 0  # fully transparent pixels carry no colour, so the overlay compresses as runs
     return out

@@ -109,7 +109,7 @@ def assess_image_quality(ctx: ToolContext, observation_id: str, roi=None) -> dic
     q = quality.assess_image_quality(img, roi=tuple(roi) if roi else None)
     ctx._glare[observation_id] = q["_glare_mask"]
     overlay = mask_to_rgba(q["_glare_mask"], (104, 170, 216), 190)  # amber: evidence compromised by glare
-    key = ctx.put_artifact(f"{observation_id}_glare.png", encode_png(overlay), "image/png")
+    key = ctx.put_artifact(f"{observation_id}_glare.png", encode_png(overlay, mask=True), "image/png")
     out = quality.public(q)
     out["glare_overlay_key"] = key
     return out
@@ -138,8 +138,8 @@ def detect_visual_candidates(ctx: ToolContext, observation_id: str, roi=None) ->
     ch, cw = det["_corrosion_mask"].shape
     full_corr[oy:oy + ch, ox:ox + cw] = det["_corrosion_mask"]
     full_metal[oy:oy + ch, ox:ox + cw] = det["_metal_mask"]
-    corr_key = ctx.put_artifact(f"{observation_id}_corrosion_mask.png", encode_png(mask_to_rgba(full_corr, (115, 124, 214), 150)), "image/png")
-    metal_key = ctx.put_artifact(f"{observation_id}_metal_mask.png", encode_png(mask_to_rgba(full_metal, (160, 173, 121), 120)), "image/png")
+    corr_key = ctx.put_artifact(f"{observation_id}_corrosion_mask.png", encode_png(mask_to_rgba(full_corr, (115, 124, 214), 150), mask=True), "image/png")
+    metal_key = ctx.put_artifact(f"{observation_id}_metal_mask.png", encode_png(mask_to_rgba(full_metal, (160, 173, 121), 120), mask=True), "image/png")
     for c in det["candidates"]:
         c["obs_id"] = observation_id
     return {
@@ -179,10 +179,10 @@ def compute_change_map(ctx: ToolContext, before_observation_id: str, after_obser
     warped, valid = registration.warp_to_reference(mov, H, ref.shape)
     ch = differences.compute_change_map(ref, warped, valid)
     aligned_key = ctx.put_artifact(f"{after_observation_id}_aligned_to_{before_observation_id}.jpg", encode_jpeg(warped), "image/jpeg")
-    heat_key = ctx.put_artifact(f"{after_observation_id}_change_heatmap.png", encode_png(differences.render_heatmap(ch["_change"], valid)), "image/png")
-    mask_key = ctx.put_artifact(f"{after_observation_id}_change_mask.png", encode_png(mask_to_rgba(ch["_mask"], (104, 170, 216), 170)), "image/png")
+    heat_key = ctx.put_artifact(f"{after_observation_id}_change_heatmap.png", encode_png(differences.render_heatmap(ch["_change"], valid), mask=True), "image/png")
+    mask_key = ctx.put_artifact(f"{after_observation_id}_change_mask.png", encode_png(mask_to_rgba(ch["_mask"], (104, 170, 216), 170), mask=True), "image/png")
     valid_key = ctx.put_artifact(f"{after_observation_id}_valid_overlap.png",
-                                 encode_png(mask_to_rgba(cv2.bitwise_not(valid), (40, 30, 25), 170)), "image/png")
+                                 encode_png(mask_to_rgba(cv2.bitwise_not(valid), (40, 30, 25), 170), mask=True), "image/png")
     glare_after = quality.specular_mask(warped)
     links = []
     for c in candidates:

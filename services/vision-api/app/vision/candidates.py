@@ -55,8 +55,49 @@ PARAMS = {
 
 
 def _smoothstep(x: np.ndarray, lo: float, hi: float) -> np.ndarray:
-    t = np.clip((x - lo) / (hi - lo), 0.0, 1.0)
-    return t * t * (3 - 2 * t)
+    # Same float32 arithmetic as clip((x - lo) / (hi - lo)) -> t*t*(3 - 2t), done in place to avoid temporaries.
+    t = x - lo
+    t /= hi - lo
+    np.clip(t, 0.0, 1.0, out=t)
+    u = t * t
+    t *= -2
+    t += 3
+    u *= t
+    return u
+
+
+# Colour cues depend on one 8-bit channel each, so they are tabulated once (256 levels) and applied with
+# cv2.LUT instead of evaluating exp/smoothstep on every pixel. Values are bit-identical to per-pixel evaluation.
+_LEVELS = np.arange(256, dtype=np.float32)
+
+
+def _table(values: np.ndarray) -> np.ndarray:
+    return np.ascontiguousarray(values, dtype=np.float32).reshape(1, 256)
+
+
+_LUT = {
+    "teal_hue": _table(np.exp(-((_LEVELS - 90.0) ** 2) / (2 * 15.0 ** 2))),
+    "verdigris_sat": _table(_smoothstep(_LEVELS, 25, 70)),
+    "verdigris_val": _table(_smoothstep(_LEVELS, 60, 120)),
+    "verdigris_cool": _table(_smoothstep(-(_LEVELS - 128.0), -6, 8)),  # indexed by Lab b (offset 128)
+    "crust_light": _table(_smoothstep(_LEVELS, 160, 190)),
+    "crust_not_specular": _table(1.0 - _smoothstep(_LEVELS, 238, 252)),
+    "brown_hue": _table(np.exp(-((_LEVELS - 14.0) ** 2) / (2 * 6.0 ** 2))),
+    "stain_sat": _table(_smoothstep(_LEVELS, 70, 130)),
+    "stain_val_lo": _table(_smoothstep(_LEVELS, 45, 80)),
+    "stain_val_hi": _table(1.0 - _smoothstep(_LEVELS, 150, 200)),
+}
+
+_ERODE_INTERIOR = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
+
+
+def _colour_planes(bgr: np.ndarray) -> dict[str, np.ndarray]:
+    """8-bit HSV / Lab channels plus float L and Lab chroma, computed once and shared by both detectors."""
+    h, s, v = cv2.split(cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV))
+    L8, a8, b8 = cv2.split(cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB))
+    a = a8.astype(np.float32) - 128.0
+    b = b8.astype(np.float32) - 128.0
+    return {"h": h, "s": s, "v": v, "L8": L8, "b8": b8, "L": L8.astype(np.float32), "chroma": np.sqrt(a * a + b * b)}
 
 
 def _texture_maps(gray: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -75,33 +116,32 @@ def _texture_maps(gray: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return energy, coherence
 
 
-def _corrosion_color_cues(bgr: np.ndarray) -> dict[str, np.ndarray]:
-    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV).astype(np.float32)
-    lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB).astype(np.float32)
-    h, s, v = hsv[:, :, 0], hsv[:, :, 1], hsv[:, :, 2]
-    L, a, b = lab[:, :, 0], lab[:, :, 1] - 128.0, lab[:, :, 2] - 128.0
+def _corrosion_color_cues(bgr: np.ndarray, planes: dict[str, np.ndarray] | None = None) -> dict[str, np.ndarray]:
+    p = planes or _colour_planes(bgr)
+    h, s, v = p["h"], p["s"], p["v"]
     # Blue-green copper salts (verdigris / copper chloride): cyan-teal hue,
     # cooler than typical green solder mask (b* low or negative).
-    hue_teal = np.exp(-((h - 90.0) ** 2) / (2 * 15.0 ** 2))
-    verdigris = hue_teal * _smoothstep(s, 25, 70) * _smoothstep(v, 60, 120) * _smoothstep(-b, -6, 8)
+    verdigris = (cv2.LUT(h, _LUT["teal_hue"]) * cv2.LUT(s, _LUT["verdigris_sat"]) * cv2.LUT(v, _LUT["verdigris_val"])
+                 * cv2.LUT(p["b8"], _LUT["verdigris_cool"]))
     # Whitish / pale crust: low chroma, mid-high lightness (not specular).
-    chroma = np.sqrt(a * a + b * b)
-    crust = _smoothstep(L, 160, 190) * (1.0 - _smoothstep(chroma, 10, 22)) * (1.0 - _smoothstep(v, 238, 252))
+    crust = cv2.LUT(p["L8"], _LUT["crust_light"]) * (1.0 - _smoothstep(p["chroma"], 10, 22)) * cv2.LUT(v, _LUT["crust_not_specular"])
     # Brown/rust staining: warm, moderately saturated, mid-dark.
-    hue_brown = np.exp(-((h - 14.0) ** 2) / (2 * 6.0 ** 2))
-    stain = hue_brown * _smoothstep(s, 70, 130) * _smoothstep(v, 45, 80) * (1.0 - _smoothstep(v, 150, 200))
+    stain = (cv2.LUT(h, _LUT["brown_hue"]) * cv2.LUT(s, _LUT["stain_sat"]) * cv2.LUT(v, _LUT["stain_val_lo"])
+             * cv2.LUT(v, _LUT["stain_val_hi"]))
     return {"verdigris": verdigris, "crust": crust, "stain": stain}
 
 
-def detect_corrosion(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) -> tuple[list[dict], np.ndarray]:
+def detect_corrosion(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray, planes: dict[str, np.ndarray] | None = None,
+                     metal_mask: np.ndarray | None = None) -> tuple[list[dict], np.ndarray]:
     H, W = gray.shape
+    planes = planes or _colour_planes(bgr)
     energy, coherence = _texture_maps(gray)
     texture = _smoothstep(energy, PARAMS["texture_lo"], PARAMS["texture_hi"]) * (1.0 - _smoothstep(coherence, 0.35, PARAMS["coherence_max"] + 0.2))
-    cues = _corrosion_color_cues(bgr)
+    cues = _corrosion_color_cues(bgr, planes)
     # Brown staining is measured and reported but does not raise candidates on its own: on brown
     # phenolic boards, copper and capacitor bodies it was indistinguishable from damage (see evaluation).
     # Pale crust on metallic surfaces (tin end caps, IC leads) is down-weighted for the same reason.
-    metal = metallic_mask(bgr, glare) > 0
+    metal = (metal_mask if metal_mask is not None else metallic_mask(bgr, glare, planes)) > 0
     crust_eff = np.where(metal, cues["crust"] * 0.35, cues["crust"])
     color = np.maximum(cues["verdigris"], crust_eff)
     score = color * (0.3 + 0.7 * texture)
@@ -123,21 +163,24 @@ def detect_corrosion(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) -> tu
         cnt = max(contours, key=cv2.contourArea) + np.array([[x, y]])
         hull_area = max(1.0, cv2.contourArea(cv2.convexHull(cnt)))
         perim = cv2.arcLength(cnt, True)
-        sel = labels == i
+        # Per-component statistics only touch the component's box (plus the erosion radius), not the whole frame.
+        win = (slice(max(0, y - 5), min(H, y + h + 5)), slice(max(0, x - 5), min(W, x + w + 5)))
+        sel = labels[win] == i
         # Corrosion crust is textured throughout; smooth objects (solder, pads) only have textured edges.
-        interior = cv2.erode(sel.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))) > 0
-        interior_energy = float(energy[interior].mean()) if np.count_nonzero(interior) >= 20 else float(energy[sel].mean())
-        mean_l = float(gray[sel].mean())
+        interior = cv2.erode(sel.astype(np.uint8), _ERODE_INTERIOR) > 0
+        e_win = energy[win]
+        interior_energy = float(e_win[interior].mean()) if np.count_nonzero(interior) >= 20 else float(e_win[sel].mean())
+        mean_l = float(gray[win][sel].mean())
         if interior_energy < PARAMS["texture_lo"] * 1.5 and mean_l > 150:
             continue
-        cue_means = {k: float(c[sel].mean()) for k, c in cues.items()}
+        cue_means = {k: float(c[win][sel].mean()) for k, c in cues.items()}
         dominant = "verdigris" if cue_means["verdigris"] >= 0.6 * cue_means["crust"] else "crust"
-        metal_frac = float(metal[sel].mean())
+        metal_frac = float(metal[win][sel].mean())
         if dominant == "crust" and (metal_frac > 0.5 or interior_energy < 6.0):
             continue
-        tex = float(texture[sel].mean())
-        col = float(color[sel].mean())
-        coh = float(coherence[sel].mean())
+        tex = float(texture[win][sel].mean())
+        col = float(color[win][sel].mean())
+        coh = float(coherence[win][sel].mean())
         solidity = float(area / hull_area)
         irregularity = float(perim * perim / (4 * math.pi * area))
         evidence = float(np.clip(0.45 * col + 0.4 * tex + 0.15 * min(1.0, (irregularity - 1) / 4), 0, 1))
@@ -156,7 +199,7 @@ def detect_corrosion(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) -> tu
                 "dominant_appearance": {"verdigris": "blue-green deposit", "crust": "pale crust", "stain": "brown staining"}[dominant],
                 "colour_cue": round(col, 3),
                 "texture_cue": round(tex, 3),
-                "mean_dog_energy": round(float(energy[sel].mean()), 2),
+                "mean_dog_energy": round(float(e_win[sel].mean()), 2),
                 "interior_dog_energy": round(interior_energy, 2),
                 "structure_coherence": round(coh, 3),
                 "solidity": round(solidity, 3),
@@ -169,10 +212,9 @@ def detect_corrosion(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) -> tu
     return out[: PARAMS["corrosion_max_candidates"]], mask
 
 
-def metallic_mask(bgr: np.ndarray, glare: np.ndarray) -> np.ndarray:
-    lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB).astype(np.float32)
-    L = lab[:, :, 0]
-    chroma = np.sqrt((lab[:, :, 1] - 128) ** 2 + (lab[:, :, 2] - 128) ** 2)
+def metallic_mask(bgr: np.ndarray, glare: np.ndarray, planes: dict[str, np.ndarray] | None = None) -> np.ndarray:
+    p = planes or _colour_planes(bgr)
+    L, chroma = p["L"], p["chroma"]
     k = max(31, (min(bgr.shape[:2]) // 12) | 1)
     local = cv2.blur(L, (k, k))
     metal = (chroma <= PARAMS["metal_chroma_max"]) & (((L - local) >= PARAMS["metal_l_local_delta"]) | (L >= PARAMS["metal_l_abs"]))
@@ -190,10 +232,22 @@ def _component_geometry(cnt: np.ndarray) -> dict:
     return {"cx": cx, "cy": cy, "length": length, "width": width, "angle": long_angle % 180.0}
 
 
-def _poly_mask(shape, cnt: np.ndarray) -> np.ndarray:
-    m = np.zeros(shape[:2], np.uint8)
-    cv2.fillPoly(m, [cnt.astype(np.int32)], 255)
-    return m
+def _poly_mean(gray: np.ndarray, poly: np.ndarray, convex: bool = False) -> tuple[float, int]:
+    """Mean grey level inside an integer polygon and its pixel count, rasterised only over its bounding box."""
+    pts = poly.astype(np.int32).reshape(-1, 2)
+    H, W = gray.shape[:2]
+    bx, by, bw, bh = cv2.boundingRect(pts)
+    x0, y0, x1, y1 = max(0, bx), max(0, by), min(W, bx + bw), min(H, by + bh)
+    if x1 <= x0 or y1 <= y0:
+        return 0.0, 0
+    m = np.zeros((y1 - y0, x1 - x0), np.uint8)
+    shifted = pts - np.array([x0, y0], np.int32)
+    if convex:
+        cv2.fillConvexPoly(m, shifted, 255)
+    else:
+        cv2.fillPoly(m, [shifted], 255)
+    n = int(np.count_nonzero(m))
+    return (float(cv2.mean(gray[y0:y1, x0:x1], mask=m)[0]) if n else 0.0), n
 
 
 def _extent(pts: np.ndarray, axis: np.ndarray) -> tuple[float, float]:
@@ -201,9 +255,10 @@ def _extent(pts: np.ndarray, axis: np.ndarray) -> tuple[float, float]:
     return float(p.min()), float(p.max())
 
 
-def detect_solder_bridges(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) -> tuple[list[dict], np.ndarray, list[dict]]:
+def detect_solder_bridges(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray,
+                          metal_mask: np.ndarray | None = None) -> tuple[list[dict], np.ndarray, list[dict]]:
     H, W = gray.shape
-    metal = metallic_mask(bgr, glare)
+    metal = metal_mask if metal_mask is not None else metallic_mask(bgr, glare)
     contours, _ = cv2.findContours(metal, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     comps = []
     max_area = 0.03 * H * W
@@ -274,7 +329,7 @@ def detect_solder_bridges(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) 
                 "lead_width": float(np.median(widths)),
                 "pitch": pitch,
                 "positions": ps,
-                "lead_grey": float(np.median([cv2.mean(gray, mask=_poly_mask(gray.shape, leads[j]["cnt"]))[0] for j in idx])),
+                "lead_grey": float(np.median([_poly_mean(gray, leads[j]["cnt"])[0] for j in idx])),
                 "angle": float(np.median([leads[j]["angle"] for j in idx])),
                 "count": len(idx),
             })
@@ -318,11 +373,10 @@ def detect_solder_bridges(bgr: np.ndarray, glare: np.ndarray, gray: np.ndarray) 
             center = row["u_center"] * u + mid_v * v
             box = cv2.boxPoints(((float(center[0]), float(center[1])), (float(2 * half_len), float(max(1.0, 0.7 * gap_w))), float(row["angle"])))
             poly = box.astype(np.int32)
-            m = np.zeros(gray.shape, np.uint8)
-            cv2.fillConvexPoly(m, poly, 255)
-            if np.count_nonzero(m) < 4:
+            mean, n_px = _poly_mean(gray, poly, convex=True)
+            if n_px < 4:
                 continue
-            gaps.append((k, float(cv2.mean(gray, mask=m)[0]), poly))
+            gaps.append((k, mean, poly))
         if len(gaps) >= 4:
             vals = np.array([g[1] for g in gaps])
             med = float(np.median(vals))
@@ -390,8 +444,10 @@ def detect_visual_candidates(bgr: np.ndarray, roi: tuple[int, int, int, int] | N
         view = bgr[oy:min(H, y + h), ox:min(W, x + w)]
         gview = glare[oy:min(H, y + h), ox:min(W, x + w)]
     gray = cv2.cvtColor(view, cv2.COLOR_BGR2GRAY)
-    corrosion, corr_mask = detect_corrosion(view, gview, gray)
-    bridges, metal_mask, rows = detect_solder_bridges(view, gview, gray)
+    planes = _colour_planes(view)
+    metal = metallic_mask(view, gview, planes)
+    corrosion, corr_mask = detect_corrosion(view, gview, gray, planes, metal)
+    bridges, metal_mask, rows = detect_solder_bridges(view, gview, gray, metal)
     # A blob explained by a lead-row bridge analysis is not also reported as corrosion.
     corrosion = [c for c in corrosion if all(_iou(c["bbox"], b["bbox"]) < 0.25 for b in bridges)]
     cands = corrosion + bridges
