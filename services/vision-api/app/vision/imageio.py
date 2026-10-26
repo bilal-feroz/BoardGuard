@@ -19,7 +19,8 @@ os.environ.setdefault("OPENCV_IO_MAX_IMAGE_PIXELS", str(64 * 1024 * 1024))
 import cv2
 import numpy as np
 
-MAX_UPLOAD_BYTES = int(os.environ.get("BOARDGUARD_MAX_UPLOAD_BYTES", 8 * 1024 * 1024))
+# Vercel caps request bodies at 4.5 MB; report that limit instead of letting the platform reject the request.
+MAX_UPLOAD_BYTES = int(os.environ.get("BOARDGUARD_MAX_UPLOAD_BYTES", 4_400_000 if os.environ.get("VERCEL") else 8 * 1024 * 1024))
 MAX_WORK_SIDE = int(os.environ.get("BOARDGUARD_MAX_WORK_SIDE", 1600))
 MIN_SIDE = 160
 

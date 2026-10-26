@@ -8,9 +8,12 @@ serve any request.
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import os
 import re
+import tempfile
 from pathlib import Path
 
 _KEY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9/_.\-]{0,200}$")
@@ -49,6 +52,55 @@ class LocalStorage:
         return {"backend": self.backend, "root": str(self.root)}
 
 
+class SharedCacheStorage(LocalStorage):
+    """Temp-dir storage mirrored into Vercel's regional Runtime Cache.
+
+    Vercel may route the requests of one inspection to different function instances, each with its own /tmp.
+    Every object is also written to the Runtime Cache, which all instances in a region share (JSON values, so
+    bytes travel base64-encoded; items up to 2 MB), and reads fall back to it. Session JSON is always read from
+    the shared cache first, because another instance may have advanced the inspection since this one saw it.
+    """
+
+    backend = "vercel-runtime-cache"
+    TTL_S = 24 * 3600
+
+    def __init__(self, root: str | os.PathLike, shared=None):
+        super().__init__(root)
+        if shared is None:
+            from vercel.cache import RuntimeCache  # only installed in the Vercel bundle
+
+            shared = RuntimeCache(namespace="boardguard", key_hash_function=lambda k: hashlib.sha256(k.encode()).hexdigest())
+        self.shared = shared
+
+    def put(self, key: str, data: bytes, content_type: str) -> str:
+        super().put(key, data, content_type)
+        self.shared.set(_check_key(key), base64.b64encode(data).decode("ascii"), {"ttl": self.TTL_S})
+        return key
+
+    def get(self, key: str) -> bytes | None:
+        mutable = key.startswith("sessions/")
+        if not mutable:
+            local = super().get(key)
+            if local is not None:
+                return local
+        value = self.shared.get(_check_key(key))
+        if isinstance(value, str):
+            data = base64.b64decode(value)
+            if not mutable:
+                super().put(key, data, "")  # keep a local copy for later requests on this instance
+            return data
+        return super().get(key) if mutable else None
+
+    def describe(self) -> dict:
+        try:
+            from vercel.cache.runtime_cache import resolve_cache
+
+            impl = type(resolve_cache(sync=True)).__name__
+        except Exception:  # noqa: BLE001 - diagnostics only
+            impl = type(self.shared).__name__
+        return {"backend": self.backend, "root": str(self.root), "shared_cache": impl}
+
+
 class S3Storage:
     backend = "aws-s3"
 
@@ -84,7 +136,16 @@ def make_storage():
     bucket = os.environ.get("BOARDGUARD_S3_BUCKET")
     if bucket:
         return S3Storage(bucket, os.environ.get("BOARDGUARD_S3_PREFIX", "boardguard/"))
-    root = os.environ.get("BOARDGUARD_DATA_DIR", str(Path(__file__).resolve().parents[2] / "var" / "store"))
+    root = os.environ.get("BOARDGUARD_DATA_DIR")
+    if not root:
+        # Serverless functions (Vercel, Lambda zip) run from a read-only bundle; only the temp dir is writable.
+        serverless = os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+        root = str(Path(tempfile.gettempdir()) / "boardguard") if serverless else str(Path(__file__).resolve().parents[2] / "var" / "store")
+    if os.environ.get("VERCEL"):
+        try:
+            return SharedCacheStorage(root)
+        except ImportError:
+            pass
     return LocalStorage(root)
 
 

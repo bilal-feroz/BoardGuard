@@ -27,7 +27,20 @@ from .vision.imageio import MAX_UPLOAD_BYTES, ImageError, decode_image
 log = logging.getLogger("boardguard")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
-FIXTURES_DIR = Path(os.environ.get("BOARDGUARD_FIXTURES_DIR", Path(__file__).resolve().parents[3] / "datasets" / "fixtures"))
+
+def _fixtures_dir() -> Path:
+    if os.environ.get("BOARDGUARD_FIXTURES_DIR"):
+        return Path(os.environ["BOARDGUARD_FIXTURES_DIR"])
+    parents = Path(__file__).resolve().parents
+    # Repository layout (datasets/fixtures), else a deployment bundle with fixtures/ next to app/ (Vercel, Lambda zip).
+    repo_dir = parents[min(3, len(parents) - 1)] / "datasets" / "fixtures"
+    for cand in (repo_dir, parents[1] / "fixtures"):
+        if (cand / "scenarios.json").exists():
+            return cand
+    return repo_dir
+
+
+FIXTURES_DIR = _fixtures_dir()
 API_KEY = os.environ.get("BOARDGUARD_API_KEY")
 RATE_PER_MIN = int(os.environ.get("BOARDGUARD_RATE_PER_MIN", 90))
 
@@ -189,7 +202,7 @@ def fixture_image(fid: str):
 
 @app.get("/api/artifacts/{key:path}")
 def artifact(key: str):
-    if storage.backend != "local-filesystem":
+    if storage.backend == "aws-s3":
         return RedirectResponse(storage.url(key))
     if not (key.startswith("artifacts/") or key.startswith("captures/")):
         _err(404, "NOT_FOUND", "No such artifact.")
