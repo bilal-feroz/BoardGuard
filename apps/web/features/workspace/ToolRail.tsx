@@ -24,7 +24,8 @@ export default function ToolRail() {
       <IconButton label="Microscope view" shortcut="B" active={micro} disabled={!hasObs} onClick={() => setCanvasMode("microscope")}><Icon.Scope /></IconButton>
       <div className="my-1.5 h-px w-6 bg-line" />
       <IconButton label="Navigate · pan, zoom, select" shortcut="V" active={tool === "navigate"} disabled={!micro} onClick={() => setTool("navigate")}><Icon.Navigate /></IconButton>
-      <IconButton label="Measure (pixels)" shortcut="M" active={tool === "measure"} disabled={!micro} onClick={() => setTool("measure")}><Icon.Measure /></IconButton>
+      <IconButton label="Measure · px, or mm once calibrated" shortcut="M" active={tool === "measure"} disabled={!micro} onClick={() => setTool(tool === "measure" ? "navigate" : "measure")}><Icon.Measure /></IconButton>
+      <IconButton label="Region evidence check · drag an area" shortcut="R" active={tool === "region"} disabled={!micro} onClick={() => setTool(tool === "region" ? "navigate" : "region")}><Icon.Select /></IconButton>
       <div className="my-1.5 h-px w-6 bg-line" />
       <IconButton label="Candidate annotations" shortcut="C" active={layers.candidates} disabled={!micro} onClick={() => toggle("candidates")}><Icon.Focus /></IconButton>
       <IconButton label="Specular glare mask" shortcut="G" active={layers.glare} disabled={!micro} onClick={() => toggle("glare")}><Icon.Light /></IconButton>

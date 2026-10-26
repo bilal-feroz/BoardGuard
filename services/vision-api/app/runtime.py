@@ -15,6 +15,9 @@ STARTED = time.time()
 
 
 def environment() -> str:
+    # Vercel Functions also expose AWS_* variables; report the platform the deployment actually targets.
+    if os.environ.get("VERCEL"):
+        return "vercel"
     if os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
         return "aws-lambda"
     if os.environ.get("ECS_CONTAINER_METADATA_URI_V4"):
@@ -39,7 +42,7 @@ def runtime_info(storage_desc: dict | None = None) -> dict:
     info = {
         "service": "boardguard-vision-api",
         "version": os.environ.get("BOARDGUARD_VERSION", "0.1.0"),
-        "git_sha": os.environ.get("BOARDGUARD_GIT_SHA"),
+        "git_sha": os.environ.get("BOARDGUARD_GIT_SHA") or os.environ.get("VERCEL_GIT_COMMIT_SHA"),
         "environment": env,
         "opencv_version": cv2.__version__,
         "opencv_package": "opencv-python-headless",
@@ -53,6 +56,13 @@ def runtime_info(storage_desc: dict | None = None) -> dict:
         "uptime_s": round(time.time() - STARTED, 1),
         "storage": storage_desc,
     }
+    if env == "vercel":
+        info["vercel"] = {
+            "region": os.environ.get("VERCEL_REGION"),
+            "deployment_env": os.environ.get("VERCEL_ENV"),
+            "deployment_url": os.environ.get("VERCEL_URL"),
+            "underlying_region": os.environ.get("AWS_REGION"),
+        }
     if env.startswith("aws"):
         info["aws"] = {
             "region": os.environ.get("AWS_REGION"),

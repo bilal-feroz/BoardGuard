@@ -165,6 +165,62 @@ def test_decisions_require_pending_review():
     assert r.status_code in (404, 409)
 
 
+def test_undo_withdraws_decision_and_reopens_review():
+    s = new()
+    iid = s["inspection_id"]
+    img, _ = render_board(bridge=True)
+    s = submit(iid, img)
+    fid = s["findings"][0]["id"]
+    assert s["undoable_decisions"] == []
+    # Dismissing the only finding closes the inspection automatically...
+    s = act(iid, type="candidate_decision", candidate_id=fid, decision="dismiss").json()
+    assert s["state"] == "COMPLETED" and s["undoable_decisions"] == [fid]
+    assert act(iid, type="candidate_decision", candidate_id=fid, decision="confirm").status_code == 409
+    # ...and the technician can still withdraw that decision: the review reopens, the trace keeps both steps.
+    s = act(iid, type="undo_decision", candidate_id=fid).json()
+    assert s["state"] == "TECHNICIAN_REVIEW_REQUIRED" and s["pending_action"]["type"] == "TECHNICIAN_REVIEW"
+    assert s["findings"][0]["status"] == "REVIEW_REQUIRED" and s["findings"][0]["technician"] is None
+    assert s["outcome"] is None
+    assert any(e["trigger"] and e["trigger"]["rule"] == "R-H2" for e in s["trace"])
+    s = act(iid, type="candidate_decision", candidate_id=fid, decision="confirm").json()
+    assert s["state"] == "VERIFICATION_PENDING" and s["undoable_decisions"] == [fid]
+
+
+def test_undo_is_refused_once_the_inspection_moved_on():
+    s = new()
+    iid = s["inspection_id"]
+    img, _ = render_board(bridge=True)
+    s = submit(iid, img)
+    fid = s["findings"][0]["id"]
+    act(iid, type="candidate_decision", candidate_id=fid, decision="confirm")
+    after, _ = render_board()
+    s = submit(iid, warp(after, seed=3, max_shift=10, max_rot_deg=2)[0])
+    assert s["verification"] is not None and s["undoable_decisions"] == []
+    r = act(iid, type="undo_decision", candidate_id=fid)
+    assert r.status_code == 409 and r.json()["error"]["code"] == "NOT_UNDOABLE"
+
+
+def test_region_check_measures_evidence_without_changing_state():
+    s = new()
+    iid = s["inspection_id"]
+    img, _ = render_board(bridge=True, **GLARE)
+    s = submit(iid, img)
+    state, n_events = s["state"], len(s["trace"])
+    obs = s["observations"][0]["obs_id"]
+    # A region over the glare hotspot is insufficient; a clean lead row has resolvable leads.
+    r = client.post(f"/api/inspections/{iid}/region-check", json={"obs_id": obs, "rect": [530, 500, 90, 90]})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["check"]["sufficient"] is False and "GLARE" in [i["code"] for i in body["check"]["issues"]]
+    assert body["check"]["crop_url"] and body["check"]["recorded"] is True
+    assert body["session"]["state"] == state and len(body["session"]["trace"]) == n_events + 1
+    r = client.post(f"/api/inspections/{iid}/region-check", json={"obs_id": obs, "rect": [330, 200, 300, 70]})
+    rows = r.json()["check"]["lead_rows"]
+    assert rows and rows[0]["lead_width_px"] >= 7
+    assert client.post(f"/api/inspections/{iid}/region-check", json={"obs_id": obs, "rect": [0, 0, 3, 3]}).status_code == 422
+    assert client.post(f"/api/inspections/{iid}/region-check", json={"obs_id": "OBS-009", "rect": [0, 0, 50, 50]}).status_code == 404
+
+
 @pytest.mark.parametrize("path", ["/api/agent/tools", "/api/agent/policies", "/api/runtime", "/api/scenarios"])
 def test_introspection_endpoints(path):
     assert client.get(path).status_code == 200

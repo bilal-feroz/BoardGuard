@@ -2,17 +2,37 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons";
-import { Badge, Button, fmtMs, fmtPct, KV, Meter, Panel, SectionTitle } from "@/components/ui";
-import { api, type Candidate, type Finding, type Observation, type Session } from "@/lib/api";
+import { Badge, Button, fmtMs, fmtPct, KV, Meter, Panel, SectionTitle, Spinner } from "@/components/ui";
+import { API_BASE, api, apiUrl, type Candidate, type Finding, type Observation, type Session } from "@/lib/api";
 import { REGIONS } from "@/lib/regions";
-import { recentInspections, useStore } from "@/lib/store";
-import { FINDING_META, REG_TONE, STATE_META, TYPE_LABEL, VERDICT_TONE } from "@/lib/status";
+import { calibrationKey, recentInspections, useStore } from "@/lib/store";
+import { envLabel, FINDING_META, REG_TONE, STATE_META, TYPE_LABEL, VERDICT_TONE } from "@/lib/status";
 import { CameraButton, FixtureOption, UploadButton } from "../microscope/CaptureControls";
+import { useReconnectCountdown } from "../workspace/TopBar";
 
 export default function Inspector() {
   const session = useStore((s) => s.session);
   if (!session) return <ScenarioPicker />;
   return <SessionInspector session={session} />;
+}
+
+function OfflinePanel() {
+  const reconnectNow = useStore((s) => s.reconnectNow);
+  const reconnect = useStore((s) => s.reconnect);
+  const secs = useReconnectCountdown();
+  return (
+    <Panel className="enter border-l-2 border-l-coral">
+      <div className="flex items-center gap-2 text-[13px] font-medium text-coral"><Icon.Alert size={14} /> Vision API unreachable</div>
+      <p className="mt-1.5 text-[12px] leading-relaxed text-ink-2">
+        The workstation cannot reach <span className="mono text-ink">{API_BASE || "this site's /api"}</span>. It reconnects automatically
+        {secs != null ? <> (attempt {reconnect?.attempt}, next in <span className="mono">{secs}s</span>)</> : null}; open inspections are kept.
+      </p>
+      {API_BASE.includes("localhost") && (
+        <p className="mono mt-1.5 text-[10.5px] leading-relaxed text-muted">Local: cd services/vision-api &amp;&amp; .venv/Scripts/python -m uvicorn app.main:app --port 8000</p>
+      )}
+      <Button className="mt-2.5" size="sm" onClick={reconnectNow}><Icon.Refresh size={12} /> Retry now</Button>
+    </Panel>
+  );
 }
 
 function ScenarioPicker() {
@@ -27,11 +47,12 @@ function ScenarioPicker() {
 
   return (
     <div className="enter">
+      {apiOnline === false && <OfflinePanel />}
       <Panel>
         <h2 className="text-[15px] font-medium text-ink">Start an inspection</h2>
         <p className="mt-1 text-[12.5px] leading-relaxed text-ink-2">
           Pick a demonstration scenario or inspect your own capture. Demo captures are recorded images; every analysis runs live
-          with OpenCV on the {env === "aws-lambda" ? "AWS" : env ?? "vision"} service.
+          with OpenCV on the {env ? envLabel(env) : "vision"} service.
         </p>
       </Panel>
       <Panel>
@@ -117,10 +138,13 @@ function SessionInspector({ session }: { session: Session }) {
   const obs = session.observations.find((o) => o.obs_id === selectedObsId) ?? session.observations[session.observations.length - 1];
   const cand = obs?.candidates.find((c) => c.id === selectedCandidateId);
   const finding = session.findings.find((f) => f.id === selectedCandidateId);
+  const apiOnline = useStore((s) => s.apiOnline);
   return (
     <div>
+      {apiOnline === false && <OfflinePanel />}
       <PendingAction session={session} />
       {cand && finding && <CandidateDetail cand={cand} finding={finding} session={session} obs={obs!} />}
+      {obs && <RegionCheckPanel obs={obs} session={session} />}
       {obs && <ObservationQuality obs={obs} />}
       <Findings session={session} />
       <DecisionRecord session={session} />
@@ -230,6 +254,7 @@ function PendingAction({ session }: { session: Session }) {
 
 function CandidateDetail({ cand, finding, session, obs }: { cand: Candidate; finding: Finding; session: Session; obs: Observation }) {
   const action = useStore((s) => s.action);
+  const undoDecision = useStore((s) => s.undoDecision);
   const busy = useStore((s) => s.busy);
   const [note, setNote] = useState("");
   const eq = cand.evidence_quality;
@@ -303,9 +328,16 @@ function CandidateDetail({ cand, finding, session, obs }: { cand: Candidate; fin
         </div>
       )}
       {finding.technician && (
-        <p className="mono mt-3 text-[11px] text-muted">
-          Technician {finding.technician.decision}ed {finding.technician.note ? `— “${finding.technician.note}”` : ""}
-        </p>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <p className="mono text-[11px] text-muted">
+            Technician {finding.technician.decision}ed {finding.technician.note ? `— “${finding.technician.note}”` : ""}
+          </p>
+          {session.undoable_decisions?.includes(finding.id) && (
+            <Button size="sm" variant="ghost" disabled={!!busy} onClick={() => undoDecision(finding.id)} title="Withdraw this decision and return the finding to review">
+              <Icon.Refresh size={12} /> Undo
+            </Button>
+          )}
+        </div>
       )}
       <p className="mono mt-2 text-[10px] text-faint">Measured on {obs.obs_id}</p>
     </Panel>
@@ -360,10 +392,79 @@ function MeterRow({ label, value, lo, hi, fmt }: { label: string; value: number;
   );
 }
 
+function RegionCheckPanel({ obs, session }: { obs: Observation; session: Session }) {
+  const check = useStore((s) => s.regionCheck);
+  const busyRect = useStore((s) => s.regionCheckBusy);
+  const clear = useStore((s) => s.clearRegionCheck);
+  const tool = useStore((s) => s.tool);
+  const setTool = useStore((s) => s.setTool);
+  const cal = useStore((s) => s.calibrations[calibrationKey(session, obs.obs_id)]);
+  const c = check?.obs_id === obs.obs_id ? check : null;
+  if (!c && !busyRect) {
+    if (tool !== "region") return null;
+    return (
+      <Panel className="enter">
+        <SectionTitle>Region evidence check</SectionTitle>
+        <p className="text-[12px] leading-relaxed text-ink-2">
+          Drag a rectangle on <span className="mono">{obs.obs_id}</span> to measure glare, focus, exposure and lead resolution inside it — the
+          same region-level checks the agent uses before deciding. The check is recorded in the trace and does not change the inspection state.
+        </p>
+      </Panel>
+    );
+  }
+  if (!c) {
+    return (
+      <Panel className="enter">
+        <SectionTitle right={<Spinner />}>Region evidence check</SectionTitle>
+        <p className="mono text-[11.5px] text-muted">Measuring {busyRect!.join(" · ")} …</p>
+      </Panel>
+    );
+  }
+  const [, , w, h] = c.rect;
+  return (
+    <Panel className="enter">
+      <SectionTitle right={
+        <span className="flex items-center gap-2">
+          <Badge tone={c.sufficient ? "teal" : "amber"}>{c.sufficient ? "sufficient" : "insufficient"}</Badge>
+          <button type="button" aria-label="Clear region check" onClick={clear} className="text-muted hover:text-ink"><Icon.X size={12} /></button>
+        </span>
+      }>Region evidence check</SectionTitle>
+      <div className="flex gap-3">
+        {c.crop_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={apiUrl(c.crop_url)} alt={`Checked region of ${c.obs_id}`} className="h-16 w-20 shrink-0 rounded-[2px] border border-line object-cover" />
+        )}
+        <div className="min-w-0 flex-1">
+          <KV k="Region" v={cal ? `${(w * cal.mmPerPx).toFixed(2)} × ${(h * cal.mmPerPx).toFixed(2)} mm` : `${w} × ${h} px`} />
+          <KV k="Glare" v={fmtPct(c.glare_fraction)} tone={c.glare_fraction >= 0.1 ? "amber" : undefined} />
+          <KV k="Blur metric" v={c.blur_metric != null ? c.blur_metric.toFixed(3) : "flat region"} tone={(c.blur_metric ?? 0) >= 0.5 ? "amber" : undefined} />
+        </div>
+      </div>
+      <KV k="Mean luminance" v={c.mean_luminance.toFixed(0)} tone={c.mean_luminance < 25 ? "amber" : undefined} />
+      <KV k="Lead rows in region" v={c.lead_rows.length ? c.lead_rows.map((r) => `${r.lead_count}×${r.lead_width_px.toFixed(0)} px`).join(", ") : "none"} />
+      {cal && c.lead_rows.length > 0 && <KV k="Lead pitch (calibrated)" v={c.lead_rows.map((r) => `${(r.pitch_px * cal.mmPerPx).toFixed(3)} mm`).join(", ")} tone="teal" />}
+      <KV k="Original pixels" v={c.rect_original_px.join(" · ")} />
+      {c.issues.length > 0 && (
+        <ul className="mt-1.5 space-y-1">
+          {c.issues.map((i, k) => (
+            <li key={k} className="text-[11.5px] leading-snug"><span className="mono mr-1.5 text-amber">{i.code}</span><span className="text-muted">{i.detail}</span></li>
+          ))}
+        </ul>
+      )}
+      <p className="mono mt-2 text-[10px] text-faint">
+        {c.recorded ? "Recorded in the trace" : "Not recorded: inspection is closed"} · {fmtMs(c.duration_ms)} · {tool === "region" ? "drag again to re-check" : ""}
+        {tool !== "region" && <button type="button" className="text-muted underline-offset-2 hover:text-ink hover:underline" onClick={() => setTool("region")}>check another area</button>}
+      </p>
+    </Panel>
+  );
+}
+
 function Findings({ session }: { session: Session }) {
   const selectCandidate = useStore((s) => s.selectCandidate);
   const selectObs = useStore((s) => s.selectObs);
   const selected = useStore((s) => s.selectedCandidateId);
+  const undoDecision = useStore((s) => s.undoDecision);
+  const busy = useStore((s) => s.busy);
   if (!session.findings.length) {
     if (!session.observations.some((o) => o.detection)) return null;
     return (
@@ -379,12 +480,13 @@ function Findings({ session }: { session: Session }) {
       <ul className="-mx-1.5">
         {session.findings.map((f) => {
           const meta = FINDING_META[f.status];
+          const undoable = session.undoable_decisions?.includes(f.id);
           return (
-            <li key={f.id}>
+            <li key={f.id} className="flex items-center">
               <button
                 type="button"
                 onClick={() => { selectObs(f.latest_obs_id); selectCandidate(f.id); }}
-                className={`flex w-full items-center gap-2.5 rounded-[3px] px-1.5 py-1.5 text-left hover:bg-raised ${selected === f.id ? "bg-raised" : ""}`}
+                className={`flex min-w-0 flex-1 items-center gap-2.5 rounded-[3px] px-1.5 py-1.5 text-left hover:bg-raised ${selected === f.id ? "bg-raised" : ""}`}
               >
                 <span className="mono w-8 text-[12px] text-ink">{f.id}</span>
                 <span className="flex-1 truncate text-[12px] text-ink-2">{TYPE_LABEL[f.type]}</span>
@@ -392,6 +494,12 @@ function Findings({ session }: { session: Session }) {
                 {f.priority === "LOW" && <span className="mono text-[10px] text-muted">LOW</span>}
                 <Badge tone={meta.tone} className="!text-[9.5px]">{meta.short}</Badge>
               </button>
+              {undoable && (
+                <button type="button" disabled={!!busy} onClick={() => undoDecision(f.id)} aria-label={`Undo decision on ${f.id}`} title="Withdraw this decision"
+                  className="ml-1 grid h-6 w-6 shrink-0 place-items-center rounded-[3px] text-muted hover:bg-raised hover:text-ink disabled:opacity-40">
+                  <Icon.Refresh size={12} />
+                </button>
+              )}
             </li>
           );
         })}

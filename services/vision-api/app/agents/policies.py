@@ -31,6 +31,7 @@ RULES = {
     "R-V2": "Before/after registration failed: withhold change map and overlays.",
     "R-V3": "Before/after registered: visible changes documented; electrical verification remains with the technician.",
     "R-H1": "Technician decision recorded.",
+    "R-H2": "Technician withdrew a decision before the inspection moved on: the finding returns to review; the withdrawal stays in the trace.",
 }
 
 RECOMMENDED_CHECKS = {

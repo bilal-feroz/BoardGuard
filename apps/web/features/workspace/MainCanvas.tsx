@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { BoardExplorer } from "@/features/board-explorer";
 import { Icon } from "@/components/icons";
+import { Button } from "@/components/ui";
 import { apiUrl } from "@/lib/api";
 import { REGIONS } from "@/lib/regions";
+import { envLabel } from "@/lib/status";
 import { regionStatuses, useStore } from "@/lib/store";
 import MicroscopeView from "../microscope/MicroscopeView";
 
@@ -32,7 +34,7 @@ export function ProcessingBar() {
         <div className="h-full w-1/3 animate-[bg-scan_1.1s_ease-in-out_infinite] bg-ink/70" style={{ animationName: "bg-slide" }} />
       </div>
       <div className="mono absolute right-3 top-2.5 rounded-[3px] border border-line bg-bg/90 px-2 py-0.5 text-[10.5px] text-ink-2">
-        {busy.label} · OpenCV on {env === "aws-lambda" ? "AWS Lambda" : env ?? "API"}
+        {busy.label} · OpenCV on {envLabel(env)}
       </div>
       <style>{`@keyframes bg-slide{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}`}</style>
     </div>
@@ -42,7 +44,13 @@ export function ProcessingBar() {
 export function ErrorToast() {
   const error = useStore((s) => s.error);
   const clear = useStore((s) => s.clearError);
+  const retry = useStore((s) => s.retry);
+  const retryLast = useStore((s) => s.retryLast);
+  const busy = useStore((s) => s.busy);
+  const session = useStore((s) => s.session);
+  const reset = useStore((s) => s.reset);
   if (!error) return null;
+  const gone = error.code === "NOT_FOUND" && !!session;
   return (
     <div role="alert" className="enter absolute bottom-4 right-4 z-30 max-w-md rounded-[4px] border border-coral/50 bg-panel px-3.5 py-2.5 shadow-xl shadow-black/50">
       <div className="flex items-start gap-2.5">
@@ -50,9 +58,42 @@ export function ErrorToast() {
         <div className="min-w-0 flex-1">
           <div className="mono text-[11px] text-coral">{error.code}</div>
           <div className="text-[12.5px] text-ink">{error.message}</div>
+          {(retry || gone) && (
+            <div className="mt-2 flex gap-2">
+              {retry && (
+                <Button size="sm" disabled={!!busy} onClick={retryLast}><Icon.Refresh size={12} /> Retry {retry.label.toLowerCase()}</Button>
+              )}
+              {gone && <Button size="sm" onClick={reset}>Start a new inspection</Button>}
+            </div>
+          )}
         </div>
         <button type="button" aria-label="Dismiss" onClick={clear} className="text-muted hover:text-ink"><Icon.X size={14} /></button>
       </div>
+    </div>
+  );
+}
+
+/** Short-lived "undo" offer after a technician confirms or dismisses a finding. */
+export function DecisionToast() {
+  const last = useStore((s) => s.lastDecision);
+  const session = useStore((s) => s.session);
+  const undo = useStore((s) => s.undoDecision);
+  const busy = useStore((s) => s.busy);
+  const error = useStore((s) => s.error);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!last) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [last]);
+  if (!last || error || now - last.at > 10_000 || !session?.undoable_decisions?.includes(last.candidateId)) return null;
+  return (
+    <div role="status" className="enter absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-[4px] border border-line-strong bg-panel px-3.5 py-2 shadow-xl shadow-black/50">
+      <span className="text-[12.5px] text-ink">
+        <span className="mono">{last.candidateId}</span> {last.decision === "confirm" ? "confirmed" : "dismissed"}
+        {session.state === "COMPLETED" ? " · inspection closed" : ""}
+      </span>
+      <Button size="sm" disabled={!!busy} onClick={() => undo(last.candidateId)}><Icon.Refresh size={12} /> Undo</Button>
     </div>
   );
 }
@@ -141,6 +182,7 @@ export default function MainCanvas() {
       </div>
       <ProcessingBar />
       <ErrorToast />
+      <DecisionToast />
     </div>
   );
 }

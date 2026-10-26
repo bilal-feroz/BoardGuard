@@ -122,7 +122,7 @@ export interface Observation {
   };
   quality: Quality | null;
   detection: {
-    lead_rows: { row: number; lead_count: number; pitch_px: number; lead_width_px: number; lead_length_px: number; angle_deg: number }[];
+    lead_rows: LeadRow[];
     layer_keys: Record<string, string>;
     layer_urls?: Record<string, string>;
     duration_ms: number;
@@ -152,7 +152,35 @@ export interface Finding {
   evidence_score: number | null;
   history: Record<string, unknown>[];
   recommended_check: string;
-  technician: { decision: "confirm" | "dismiss"; note: string; timestamp: string } | null;
+  technician: { decision: "confirm" | "dismiss"; note: string; timestamp: string; previous_status?: FindingStatus } | null;
+}
+
+export interface LeadRow {
+  row: number;
+  lead_count: number;
+  pitch_px: number;
+  lead_width_px: number;
+  lead_length_px: number;
+  angle_deg: number;
+}
+
+/** Technician-drawn region evidence check (glare, blur, exposure, lead resolution). */
+export interface RegionCheck {
+  obs_id: string;
+  rect: Rect;
+  rect_original_px: Rect;
+  crop_key: string;
+  crop_url?: string;
+  glare_fraction: number;
+  blur_metric: number | null;
+  laplacian_variance: number;
+  mean_luminance: number;
+  lead_rows: LeadRow[];
+  issues: { code: string; detail: string }[];
+  sufficient: boolean;
+  duration_ms: number;
+  recorded: boolean;
+  timestamp: string;
 }
 
 export interface TraceEvent {
@@ -244,9 +272,12 @@ export interface Session {
   verification: Verification | null;
   technician_log: Record<string, string>[];
   pending_action: PendingAction | null;
-  outcome: { status: string; summary: string } | null;
+  outcome: { status: string; summary: string; via?: string } | null;
   trace: TraceEvent[];
   runtime: { environment: string };
+  /** Findings whose technician decision can still be withdrawn (server-computed). */
+  undoable_decisions?: string[];
+  region_checks?: RegionCheck[];
 }
 
 export interface FixtureMeta {
@@ -294,6 +325,7 @@ export interface Runtime {
   uptime_s: number;
   storage: Record<string, string>;
   aws?: Record<string, string | null>;
+  vercel?: Record<string, string | null>;
   git_sha?: string | null;
 }
 
@@ -307,14 +339,22 @@ export class ApiError extends Error {
   }
 }
 
-async function call<T>(path: string, init?: RequestInit): Promise<{ data: T; ms: number; env: string | null }> {
+// Longer than the serverless function limit (60 s), so a hung request surfaces as an error instead of a stuck spinner.
+const TIMEOUT_MS = 75_000;
+
+async function call<T>(path: string, init?: RequestInit, timeoutMs = TIMEOUT_MS): Promise<{ data: T; ms: number; env: string | null }> {
   const t0 = performance.now();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, init);
+    res = await fetch(`${API_BASE}${path}`, { ...init, signal: ctrl.signal });
   } catch {
+    clearTimeout(timer);
+    if (ctrl.signal.aborted) throw new ApiError("TIMEOUT", `The vision API did not answer within ${Math.round(timeoutMs / 1000)} s.`, 0);
     throw new ApiError("NETWORK", "Cannot reach the BoardGuard vision API. Check the connection and that the service is running.", 0);
   }
+  clearTimeout(timer);
   const ms = performance.now() - t0;
   if (!res.ok) {
     let code = "HTTP_" + res.status;
@@ -330,7 +370,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<{ data: T; ms:
 }
 
 export const api = {
-  health: () => call<{ status: string; opencv_version: string; environment: string; storage: string }>("/api/health"),
+  health: (timeoutMs?: number) => call<{ status: string; opencv_version: string; environment: string; storage: string }>("/api/health", undefined, timeoutMs),
   runtime: () => call<Runtime>("/api/runtime"),
   tools: () => call<{ tools: { name: string; kind: string; inputs: Record<string, string>; outputs: Record<string, string> }[] }>("/api/agent/tools"),
   policies: () => call<{ rules: Record<string, string>; max_recaptures: number; quality_thresholds: Record<string, number>; registration_criteria: Record<string, unknown>; candidate_params: Record<string, number>; change_params: Record<string, number>; recommended_checks: Record<string, string> }>("/api/agent/policies"),
@@ -352,6 +392,10 @@ export const api = {
   },
   action: (id: string, body: { type: string; candidate_id?: string; decision?: string; note?: string; result?: string }) =>
     call<Session>(`/api/inspections/${id}/actions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }),
+  regionCheck: (id: string, obsId: string, rect: Rect) =>
+    call<{ check: RegionCheck; session: Session }>(`/api/inspections/${id}/region-check`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ obs_id: obsId, rect }),
+    }),
   reportUrl: (id: string, fmt: "html" | "json") => `${API_BASE}/api/inspections/${id}/report.${fmt}`,
   traceUrl: (id: string) => `${API_BASE}/api/inspections/${id}/trace`,
 };

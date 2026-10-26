@@ -5,7 +5,7 @@ import { Icon } from "@/components/icons";
 import { Badge, Button, fmtMs, Tooltip } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useStore, type Workspace } from "@/lib/store";
-import { STATE_META } from "@/lib/status";
+import { envLabel, STATE_META } from "@/lib/status";
 
 const TABS: { id: Workspace; label: string; key: string }[] = [
   { id: "inspect", label: "Inspect", key: "1" },
@@ -25,6 +25,50 @@ export function Wordmark() {
       </svg>
       <span className="mono text-[12.5px] font-medium tracking-[0.2em] text-ink">BOARDGUARD</span>
     </div>
+  );
+}
+
+/** Seconds until the next automatic reconnect attempt (re-renders once a second while offline). */
+export function useReconnectCountdown() {
+  const reconnect = useStore((s) => s.reconnect);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!reconnect) return;
+    const t = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(t);
+  }, [reconnect]);
+  return reconnect ? Math.max(0, Math.ceil((reconnect.nextAt - now) / 1000)) : null;
+}
+
+function ApiStatus() {
+  const apiOnline = useStore((s) => s.apiOnline);
+  const apiEnv = useStore((s) => s.apiEnv);
+  const opencv = useStore((s) => s.opencv);
+  const latency = useStore((s) => s.lastLatencyMs);
+  const reconnectNow = useStore((s) => s.reconnectNow);
+  const secs = useReconnectCountdown();
+  const cloud = apiEnv?.startsWith("aws") || apiEnv === "vercel";
+
+  if (apiOnline === false) {
+    return (
+      <span className="mono flex items-center gap-2 text-[11px] text-coral" role="status">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-coral" />
+        API offline{secs != null ? ` · retry in ${secs}s` : ""}
+        <button type="button" onClick={reconnectNow} className="inline-flex h-6 items-center gap-1 rounded-[3px] border border-coral/50 px-1.5 text-[10.5px] text-ink hover:bg-coral-dim/40">
+          <Icon.Refresh size={11} /> Retry
+        </button>
+      </span>
+    );
+  }
+  return (
+    <Tooltip label={apiOnline ? `Vision API online · ${envLabel(apiEnv)} · last call ${fmtMs(latency)}` : "Connecting to the vision API"} side="bottom">
+      <span className="mono flex items-center gap-1.5 text-[11px] text-ink-2">
+        <span className={`h-1.5 w-1.5 rounded-full ${apiOnline ? "bg-teal" : "bg-muted"}`} />
+        {cloud ? <Icon.Cloud size={13} /> : <Icon.Cpu size={13} />}
+        {apiOnline ? envLabel(apiEnv) : "…"}
+        {opencv && <span className="text-muted">· OpenCV {opencv}</span>}
+      </span>
+    </Tooltip>
   );
 }
 
@@ -48,14 +92,9 @@ export default function TopBar() {
   const workspace = useStore((s) => s.workspace);
   const setWorkspace = useStore((s) => s.setWorkspace);
   const session = useStore((s) => s.session);
-  const apiOnline = useStore((s) => s.apiOnline);
-  const apiEnv = useStore((s) => s.apiEnv);
-  const opencv = useStore((s) => s.opencv);
-  const latency = useStore((s) => s.lastLatencyMs);
   const reset = useStore((s) => s.reset);
   const cams = useCameraCount();
   const meta = session ? STATE_META[session.state] ?? { label: session.state, tone: "neutral" as const } : null;
-  const cloud = apiEnv?.startsWith("aws");
 
   return (
     <header className="flex h-11 items-center gap-4 border-b border-line bg-surface pl-3.5 pr-3">
@@ -89,14 +128,7 @@ export default function TopBar() {
         )}
       </div>
       <div className="flex items-center gap-3">
-        <Tooltip label={apiOnline ? `Vision API online · ${apiEnv} · last call ${fmtMs(latency)}` : "Vision API unreachable"} side="bottom">
-          <span className="mono flex items-center gap-1.5 text-[11px] text-ink-2">
-            <span className={`h-1.5 w-1.5 rounded-full ${apiOnline ? "bg-teal" : apiOnline === false ? "bg-coral" : "bg-muted"}`} />
-            {cloud ? <Icon.Cloud size={13} /> : <Icon.Cpu size={13} />}
-            {apiOnline === false ? "API offline" : apiEnv === "aws-lambda" ? "AWS Lambda" : apiEnv ?? "…"}
-            {opencv && <span className="text-muted">· OpenCV {opencv}</span>}
-          </span>
-        </Tooltip>
+        <ApiStatus />
         <Tooltip label={cams ? `${cams} camera device(s) available for live capture` : "No camera detected; upload or use recorded captures"} side="bottom">
           <span className="mono hidden items-center gap-1.5 text-[11px] text-muted lg:flex">
             <Icon.Camera size={13} />

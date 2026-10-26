@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons";
 import { Badge, Button, fmtMs, KV, SectionTitle, Spinner } from "@/components/ui";
 import { API_BASE, api, type Runtime } from "@/lib/api";
+import { envLabel } from "@/lib/status";
 import { useStore } from "@/lib/store";
 
 interface EvalMetric { name: string; value: number | string; unit?: string; note?: string }
@@ -71,7 +72,7 @@ export default function SystemView() {
         <Card title="Processing runtime" right={rt ? <Badge tone="teal">live</Badge> : rtErr ? <Badge tone="coral">offline</Badge> : <Spinner />}>
           {rt ? (
             <>
-              <KV k="Environment" v={rt.environment} tone={rt.environment.startsWith("aws") ? "teal" : undefined} />
+              <KV k="Environment" v={envLabel(rt.environment)} tone={rt.environment !== "local" ? "teal" : undefined} />
               <KV k="OpenCV" v={`${rt.opencv_version} (${rt.opencv_package})`} tone="teal" />
               <KV k="OpenCV threads" v={rt.opencv_threads} />
               <KV k="NumPy / Python" v={`${rt.numpy_version} / ${rt.python_version}`} />
@@ -81,6 +82,8 @@ export default function SystemView() {
               <KV k="Uptime" v={`${Math.round(rt.uptime_s)} s`} />
               <KV k="API base" v={API_BASE || "same origin"} />
               {rt.aws && Object.entries(rt.aws).map(([k, v]) => <KV key={k} k={`aws.${k}`} v={v ?? "—"} />)}
+              {rt.vercel && Object.entries(rt.vercel).map(([k, v]) => <KV key={k} k={`vercel.${k}`} v={v ?? "—"} />)}
+              {rt.git_sha && <KV k="Commit" v={rt.git_sha.slice(0, 7)} />}
               <div className="mt-2 text-[10.5px] text-muted">
                 <div className="label !text-[10px]">CPU dispatch (cv2 build)</div>
                 <p className="mono mt-0.5 break-words">{rt.opencv_build?.dispatched_code_generation}</p>

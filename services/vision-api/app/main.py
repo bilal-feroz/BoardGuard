@@ -111,7 +111,7 @@ def _with_urls(obj):
 
 
 def _session_out(s: dict) -> dict:
-    return _with_urls(s) | {"runtime": {"environment": environment()}}
+    return _with_urls(s) | {"runtime": {"environment": environment()}, "undoable_decisions": agent.undoable_decisions(s)}
 
 
 def _load(iid: str) -> dict:
@@ -255,6 +255,17 @@ class Action(BaseModel):
 def inspection_action(iid: str, body: Action):
     s = _load(iid)
     return _session_out(agent.technician_action(s, body.model_dump()))
+
+
+class RegionCheck(BaseModel):
+    obs_id: str = Field(..., pattern=r"^OBS-[0-9]{3}$")
+    rect: list[int] = Field(..., min_length=4, max_length=4)
+
+
+@app.post("/api/inspections/{iid}/region-check")
+def region_check(iid: str, body: RegionCheck):
+    s, check = agent.region_check(_load(iid), body.obs_id, body.rect)
+    return {"check": _with_urls(check), "session": _session_out(s)}
 
 
 @app.get("/api/inspections/{iid}/trace")

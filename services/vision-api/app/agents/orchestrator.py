@@ -17,7 +17,8 @@ import secrets
 import time
 from datetime import datetime, timezone
 
-from ..vision.imageio import decode_image, encode_jpeg
+from ..vision import candidates as cand_mod
+from ..vision.imageio import clamp_rect, decode_image, encode_jpeg
 from . import policies, tools
 from .policies import MAX_RECAPTURES, RECOMMENDED_CHECKS, RULES
 
@@ -327,6 +328,8 @@ class Orchestrator:
             instruction = "Review each finding, confirm or dismiss it, and perform the recommended electrical checks."
         self._set_pending(s, {"type": "TECHNICIAN_REVIEW", "candidate_ids": cids, "instruction": instruction,
                               "recommended_checks": checks, "no_findings": no_findings, "rule": rule})
+        # Snapshot of the review request, so a withdrawn decision (undo) can reopen exactly this review.
+        s["last_review"] = dict(s["pending_action"]) | {"n_obs": len(s["observations"])}
         self._event(s, kind="action", title="Technician review requested", tool="request_technician_review", rule=rule,
                     obs_id=obs["obs_id"], inputs={"candidate_ids": cids}, observations={"recommended_checks": checks} if checks else {"no_findings": True},
                     to_state="TECHNICIAN_REVIEW_REQUIRED", next_action="Await technician decision")
@@ -508,12 +511,76 @@ class Orchestrator:
                 best, best_n = i, n
         return best
 
+    # ------------------------------------------------------------------ technician-initiated region check
+    def region_check(self, s: dict, obs_id: str, rect: list[int]) -> tuple[dict, dict]:
+        """Measure evidence quality (glare, blur, exposure, lead resolution) inside a technician-drawn region.
+
+        Read-only with respect to the agent: it never changes the state or the pending action. On an open
+        inspection the check is appended to the trace; on a closed one it is computed but not recorded.
+        """
+        obs = next((o for o in s["observations"] if o["obs_id"] == obs_id), None)
+        if obs is None:
+            raise AgentError("UNKNOWN_OBSERVATION", f"No observation {obs_id} in this inspection.", 404)
+        x, y, w, h = clamp_rect(*rect, obs["width"], obs["height"])
+        if w < 8 or h < 8:
+            raise AgentError("REGION_TOO_SMALL", "Draw a region of at least 8 x 8 pixels.", 422)
+        ctx = tools.ToolContext(self.storage, s)
+        roi = tools.TOOLS["extract_region_of_interest"](ctx, observation_id=obs_id, bbox=[x, y, w, h], margin=0.0)
+        t0 = time.perf_counter()
+        det = cand_mod.detect_visual_candidates(ctx.image(obs_id), roi=(x, y, w, h), glare=ctx.glare(obs_id))
+        eq = roi["evidence_quality"]
+        issues = list(eq["issues"])
+        rows = det["lead_rows"]
+        min_w = cand_mod.PARAMS["min_lead_width_px"]
+        narrow = [r for r in rows if r["lead_width_px"] < min_w]
+        if narrow:
+            issues.append({"code": "RESOLUTION", "detail": f"Leads are only {min(r['lead_width_px'] for r in narrow):.0f} px wide; "
+                                                           f"at least {min_w} px is needed to judge a bridge."})
+        scale = obs.get("scale_to_working") or 1.0
+        check = {
+            "obs_id": obs_id, "rect": [x, y, w, h],
+            "rect_original_px": [round(v / scale) for v in (x, y, w, h)],
+            "crop_key": roi["crop_key"],
+            "glare_fraction": eq["glare_fraction"], "blur_metric": eq["blur_metric"],
+            "laplacian_variance": eq["laplacian_variance"], "mean_luminance": eq["mean_luminance"],
+            "lead_rows": rows, "issues": issues, "sufficient": not issues,
+            "duration_ms": round(roi["duration_ms"] + (time.perf_counter() - t0) * 1000, 1),
+            "recorded": s["state"] not in TERMINAL, "timestamp": _now(),
+        }
+        if check["recorded"]:
+            s.setdefault("region_checks", []).append(check)
+            self._event(s, kind="tool", actor="technician", title=f"Region evidence check on {obs_id} (technician)",
+                        tool="extract_region_of_interest", obs_id=obs_id, duration_ms=check["duration_ms"],
+                        inputs={"observation_id": obs_id, "bbox": [x, y, w, h]},
+                        observations={"sufficient": check["sufficient"], "glare_fraction": eq["glare_fraction"],
+                                      "blur_metric": eq["blur_metric"], "mean_luminance": eq["mean_luminance"],
+                                      "lead_rows": len(rows), "issues": [i["code"] for i in issues]},
+                        status="ok" if check["sufficient"] else "warning")
+            self.repo.save(s)
+        return s, check
+
     # ------------------------------------------------------------------ human-in-the-loop
+    def undoable_decisions(self, s: dict) -> list[str]:
+        """Findings whose technician decision can still be withdrawn: the review it belongs to is the current step."""
+        review = s.get("last_review")
+        if not review or len(s["observations"]) != review.get("n_obs"):
+            return []
+        pending = s.get("pending_action") or {}
+        st = s["state"]
+        open_review = st == "TECHNICIAN_REVIEW_REQUIRED" and pending.get("type") == "TECHNICIAN_REVIEW"
+        review_done = (st == "VERIFICATION_PENDING" and pending.get("type") == "AFTER_CAPTURE" and pending.get("optional")
+                       and s.get("verification") is None)
+        auto_closed = st == "COMPLETED" and (s.get("outcome") or {}).get("via") == "review"
+        if not (open_review or review_done or auto_closed):
+            return []
+        return [f["id"] for f in s["findings"] if f["id"] in review.get("candidate_ids", []) and f["technician"] is not None]
+
     def technician_action(self, s: dict, action: dict) -> dict:
         t = action.get("type")
         note = (action.get("note") or "")[:500]
         pending = (s.get("pending_action") or {}).get("type")
-        if s["state"] in TERMINAL:
+        # An inspection closed automatically by the last review decision can still have that decision withdrawn.
+        if s["state"] in TERMINAL and t != "undo_decision":
             raise AgentError("SESSION_CLOSED", f"Inspection is {s['state']}.")
         entry = {"timestamp": _now(), "type": t, "note": note, "actor": "technician (unauthenticated demo user)"}
 
@@ -526,7 +593,9 @@ class Orchestrator:
             decision = action.get("decision")
             if decision not in ("confirm", "dismiss"):
                 raise AgentError("BAD_DECISION", "decision must be 'confirm' or 'dismiss'", 422)
-            f["technician"] = {"decision": decision, "note": note, "timestamp": entry["timestamp"]}
+            if f["technician"] is not None:
+                raise AgentError("ALREADY_DECIDED", f"{f['id']} is already {f['technician']['decision']}ed; undo it first.")
+            f["technician"] = {"decision": decision, "note": note, "timestamp": entry["timestamp"], "previous_status": f["status"]}
             f["status"] = "TECHNICIAN_CONFIRMED" if decision == "confirm" else "TECHNICIAN_DISMISSED"
             entry.update({"candidate_id": f["id"], "decision": decision})
             s["technician_log"].append(entry)
@@ -535,6 +604,25 @@ class Orchestrator:
             open_ = [x for x in s["findings"] if x["id"] in s["pending_action"].get("candidate_ids", []) and x["technician"] is None]
             if not open_:
                 self._after_review(s)
+        elif t == "undo_decision":
+            cid = action.get("candidate_id") or ""
+            f = self._finding(s, cid)
+            if f is None:
+                raise AgentError("UNKNOWN_CANDIDATE", "No such finding.", 404)
+            if cid not in self.undoable_decisions(s):
+                raise AgentError("NOT_UNDOABLE", "This decision can no longer be withdrawn: the inspection has moved on.")
+            prev = f["technician"]
+            f["status"] = prev.get("previous_status") or "REVIEW_REQUIRED"
+            f["technician"] = None
+            entry.update({"candidate_id": cid, "withdrawn_decision": prev["decision"]})
+            s["technician_log"].append(entry)
+            self._set_pending(s, {k: v for k, v in s["last_review"].items() if k != "n_obs"})
+            s["outcome"] = None
+            withdrawn = "confirmation" if prev["decision"] == "confirm" else "dismissal"
+            self._event(s, kind="human", actor="technician", title=f"{cid} {withdrawn} withdrawn by technician (undo)",
+                        tool="record_verification", rule="R-H2",
+                        inputs={"candidate_id": cid, "withdrawn_decision": prev["decision"], "note": note},
+                        to_state="TECHNICIAN_REVIEW_REQUIRED", next_action="Await technician decision")
         elif t == "acknowledge_no_findings":
             if pending != "TECHNICIAN_REVIEW" or not s["pending_action"].get("no_findings"):
                 raise AgentError("NOT_APPLICABLE", "There are findings to review.")
@@ -613,7 +701,7 @@ class Orchestrator:
                                       "electrical_checks": {f["id"]: f["recommended_check"] for f in confirmed}},
                         to_state="VERIFICATION_PENDING", next_action="After-repair capture or close")
         else:
-            self._complete(s, self._summary(s))
+            self._complete(s, self._summary(s), via="review")
 
     def _summary(self, s) -> str:
         c = sum(1 for f in s["findings"] if f["status"] == "TECHNICIAN_CONFIRMED")
@@ -626,8 +714,9 @@ class Orchestrator:
             parts.append("electrical verification pending")
         return "; ".join(parts) + "."
 
-    def _complete(self, s, summary: str):
+    def _complete(self, s, summary: str, via: str = "technician"):
+        # `via` records what closed the inspection; only a close caused by the last review decision can be undone.
         self._set_pending(s, None)
-        s["outcome"] = {"status": "COMPLETED", "summary": summary}
+        s["outcome"] = {"status": "COMPLETED", "summary": summary, "via": via}
         self._event(s, kind="system", title="Inspection completed", observations={"summary": summary}, to_state="COMPLETED",
                     next_action="Export report")

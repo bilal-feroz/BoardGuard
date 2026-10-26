@@ -80,6 +80,82 @@ test("system screen shows live OpenCV 5 runtime", async ({ page }) => {
   await shot(page, "system");
 });
 
+/** Page coordinates of a point given in microscope image (working) pixels. */
+async function imageToPage(page: Page, x: number, y: number): Promise<[number, number]> {
+  return page.evaluate(([ix, iy]) => {
+    const el = document.querySelector('[role="img"][aria-label^="Microscope capture"]') as HTMLElement;
+    const layer = el.querySelector("div.origin-top-left") as HTMLElement;
+    const m = /translate\(([-\d.]+)px, ([-\d.]+)px\) scale\(([-\d.e]+)\)/.exec(layer.style.transform)!;
+    const r = el.getBoundingClientRect();
+    return [r.left + Number(m[1]) + ix * Number(m[3]), r.top + Number(m[2]) + iy * Number(m[3])] as [number, number];
+  }, [x, y]);
+}
+
+async function dragImage(page: Page, from: [number, number], to: [number, number]) {
+  const a = await imageToPage(page, ...from);
+  const b = await imageToPage(page, ...to);
+  await page.mouse.move(a[0], a[1]);
+  await page.mouse.down();
+  await page.mouse.move(b[0], b[1], { steps: 10 });
+  await page.mouse.up();
+}
+
+test("region evidence check, calibrated ruler and undo of a technician decision", async ({ page }) => {
+  await startScenario(page, "Possible solder bridge under glare");
+  await expect(page.getByText("Agent requests a recapture").filter({ visible: true }).first()).toBeVisible();
+  await page.waitForTimeout(800);
+
+  // Region check over the ring-light hotspot on the right lead row: glare makes the evidence insufficient.
+  await page.keyboard.press("r");
+  await dragImage(page, [1440, 610], [1597, 780]);
+  const panel = page.locator("section", { hasText: "Region evidence check" });
+  await expect(panel.getByText("insufficient").first()).toBeVisible();
+  await expect(panel.getByText("GLARE").first()).toBeVisible();
+  await expect(page.getByText("Agent requests a recapture").filter({ visible: true }).first()).toBeVisible(); // state unchanged
+  await shot(page, "region-check");
+
+  await page.getByRole("button", { name: /TQFP-144 recaptured with diffuse light/ }).click();
+  await expect(page.getByText("Technician review required").filter({ visible: true }).first()).toBeVisible();
+
+  // Calibrate from the detected TQFP lead row (0.5 mm pitch), then measure in millimetres.
+  await page.keyboard.press("m");
+  await page.getByLabel("Package lead pitch").selectOption("0.5");
+  await page.getByRole("button", { name: "Set", exact: true }).first().click();
+  await expect(page.getByText(/1 px = 0\.0\d+ mm/).filter({ visible: true }).first()).toBeVisible();
+  await dragImage(page, [300, 300], [700, 300]);
+  await expect(page.locator("svg text").filter({ hasText: / mm$/ }).first()).toBeVisible();
+  await shot(page, "calibrated-ruler");
+  await page.keyboard.press("Escape");
+
+  // Dismiss C01, then withdraw the decision: the finding returns to review.
+  await page.getByRole("button", { name: /^C01/ }).first().click();
+  await page.getByRole("button", { name: "Dismiss" }).click();
+  const toast = page.getByRole("status").filter({ hasText: "C01 dismissed" });
+  await expect(toast).toBeVisible();
+  await toast.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByRole("button", { name: "Dismiss", exact: true })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "C01 dismissed" })).toHaveCount(0);
+  await shot(page, "undo");
+  await page.getByRole("button", { name: "Evidence", exact: true }).click();
+  await expect(page.getByText("R-H2").filter({ visible: true }).first()).toBeVisible();
+});
+
+test("API outage: offline banner, then automatic recovery", async ({ page }) => {
+  let down = true;
+  await page.route("**/api/**", (route) => (down ? route.abort("connectionrefused") : route.continue()));
+  await page.goto("/");
+  await expect(page.getByText("Vision API unreachable").filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText(/API offline · retry in \d+s/).first()).toBeVisible();
+  await shot(page, "offline");
+  // A manual retry while the API is still down keeps the workstation offline (and counts the attempt).
+  await page.getByRole("button", { name: "Retry now" }).click();
+  await expect(page.getByText(/attempt [2-9]/).first()).toBeVisible();
+  // Once the API is back, the backoff loop reconnects on its own and loads the scenarios.
+  down = false;
+  await expect(page.getByText("Vision API unreachable")).toHaveCount(0, { timeout: 20_000 });
+  await expect(page.getByRole("button", { name: /Suspected corrosion/ })).toBeVisible();
+});
+
 test("upload rejects a non-image with a specific error", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "New inspection" }).click();

@@ -31,12 +31,16 @@ export default function Workstation() {
       if (KEYS[e.key]) s.setWorkspace(KEYS[e.key]);
       else if (k === "v") s.setTool("navigate");
       else if (k === "m") s.setTool(s.tool === "measure" ? "navigate" : "measure");
+      else if (k === "r") s.setTool(s.tool === "region" ? "navigate" : "region");
       else if (k === "c") s.toggleLayer("candidates");
       else if (k === "g") s.toggleLayer("glare");
       else if (k === "t") s.toggleLayer("tiles");
       else if (k === "o") s.setShowOriginal(!s.showOriginal);
       else if (k === "b") s.setCanvasMode(s.canvasMode === "board" && s.session?.observations.length ? "microscope" : "board");
-      else if (k === "escape") s.selectCandidate(null);
+      else if (k === "escape") {
+        s.selectCandidate(null);
+        if (s.tool !== "navigate") s.setTool("navigate");
+      }
       else return;
     };
     window.addEventListener("keydown", onKey);

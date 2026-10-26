@@ -25,9 +25,15 @@ interface Props {
   screen?: (p: CanvasOverlayRenderProps) => ReactNode;
   view?: View | null;
   onViewChange?: (v: View) => void;
-  measure?: boolean;
+  /** "measure": drag a ruler. "region": drag a rectangle and receive it through onRegion. */
+  tool?: "navigate" | "measure" | "region";
   /** Working-px to original-px factor (1 / scale_to_working). */
   pxToOriginal?: number;
+  /** Physical calibration of this capture; the ruler shows millimetres when set. */
+  mmPerPx?: number | null;
+  /** Current ruler length in working pixels (null when there is no ruler). */
+  onRuler?: (lengthPx: number | null) => void;
+  onRegion?: (rect: [number, number, number, number]) => void;
   ariaLabel: string;
   onImageClick?: (x: number, y: number) => void;
   hud?: boolean;
@@ -43,9 +49,15 @@ export function fitView(cw: number, ch: number, w: number, h: number, pad = 28):
   return { s, tx: (cw - w * s) / 2, ty: (ch - h * s) / 2 };
 }
 
+export function fmtLength(px: number, mmPerPx?: number | null) {
+  if (!mmPerPx) return `${px.toFixed(1)} px`;
+  const mm = px * mmPerPx;
+  return `${px.toFixed(1)} px · ${mm >= 10 ? mm.toFixed(1) : mm >= 1 ? mm.toFixed(2) : mm.toFixed(3)} mm`;
+}
+
 export default function ImageCanvas({
-  src, width, height, svg, layers = [], screen, view: controlled, onViewChange, measure = false, pxToOriginal = 1,
-  ariaLabel, onImageClick, hud = true, fitKey, children,
+  src, width, height, svg, layers = [], screen, view: controlled, onViewChange, tool = "navigate", pxToOriginal = 1, mmPerPx,
+  onRuler, onRegion, ariaLabel, onImageClick, hud = true, fitKey, children,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -53,11 +65,19 @@ export default function ImageCanvas({
   const view = controlled ?? local;
   const drag = useRef<{ x: number; y: number; tx: number; ty: number; moved: boolean } | null>(null);
   const [cursor, setCursor] = useState<[number, number] | null>(null);
-  // Ruler and load state are keyed to the image so they reset without effects when it changes.
-  const rulerKey = `${src}|${measure}`;
+  const measure = tool === "measure";
+  const region = tool === "region";
+  // Ruler, region and load state are keyed to the image so they reset without effects when it changes.
+  const rulerKey = `${src}|${tool}`;
   const [rulerState, setRulerState] = useState<{ key: string; a: [number, number]; b: [number, number]; active: boolean } | null>(null);
   const ruler = rulerState?.key === rulerKey ? rulerState : null;
-  const setRuler = (r: { a: [number, number]; b: [number, number]; active: boolean } | null) => setRulerState(r ? { ...r, key: rulerKey } : null);
+  const setRuler = (r: { a: [number, number]; b: [number, number]; active: boolean } | null) => {
+    setRulerState(r ? { ...r, key: rulerKey } : null);
+    onRuler?.(r ? Math.hypot(r.b[0] - r.a[0], r.b[1] - r.a[1]) : null);
+  };
+  const [boxState, setBoxState] = useState<{ key: string; a: [number, number]; b: [number, number] } | null>(null);
+  const box = boxState?.key === rulerKey ? boxState : null;
+  const clampPt = (p: [number, number]): [number, number] => [Math.min(width, Math.max(0, p[0])), Math.min(height, Math.max(0, p[1]))];
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
   const loaded = loadedSrc === src;
 
@@ -123,6 +143,11 @@ export default function ImageCanvas({
       if (p) setRuler({ a: p, b: p, active: true });
       return;
     }
+    if (region) {
+      const p = toImage(e.clientX, e.clientY);
+      if (p) setBoxState({ key: rulerKey, a: clampPt(p), b: clampPt(p) });
+      return;
+    }
     drag.current = { x: e.clientX, y: e.clientY, tx: view.tx, ty: view.ty, moved: false };
   };
   const onPointerMove = (e: React.PointerEvent) => {
@@ -130,6 +155,10 @@ export default function ImageCanvas({
     setCursor(p);
     if (measure && ruler?.active && p) {
       setRuler({ ...ruler, b: p });
+      return;
+    }
+    if (region && box && p) {
+      setBoxState({ ...box, b: clampPt(p) });
       return;
     }
     const d = drag.current;
@@ -143,6 +172,15 @@ export default function ImageCanvas({
   const onPointerUp = (e: React.PointerEvent) => {
     if (measure && ruler?.active) {
       setRuler({ ...ruler, active: false });
+      return;
+    }
+    if (region && box) {
+      const x = Math.round(Math.min(box.a[0], box.b[0]));
+      const y = Math.round(Math.min(box.a[1], box.b[1]));
+      const w = Math.round(Math.abs(box.b[0] - box.a[0]));
+      const h = Math.round(Math.abs(box.b[1] - box.a[1]));
+      setBoxState(null);
+      if (w >= 8 && h >= 8) onRegion?.([x, y, w, h]);
       return;
     }
     const d = drag.current;
@@ -181,7 +219,7 @@ export default function ImageCanvas({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerLeave={() => setCursor(null)}
-      className={`relative h-full w-full select-none overflow-hidden canvas-grid outline-none ${measure ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}
+      className={`relative h-full w-full select-none overflow-hidden canvas-grid outline-none ${measure || region ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}
     >
       {view && (
         <div className="absolute left-0 top-0 origin-top-left will-change-transform" style={{ transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.s})`, width, height }}>
@@ -220,11 +258,28 @@ export default function ImageCanvas({
                 <circle cx={ax} cy={ay} r={3} fill="#F0F0EB" />
                 <circle cx={bx} cy={by} r={3} fill="#F0F0EB" />
                 <g transform={`translate(${(ax + bx) / 2 + 8}, ${(ay + by) / 2 - 8})`}>
-                  <rect x={-4} y={-13} width={172} height={18} rx={2} fill="#111719" stroke="#3a4648" />
+                  <rect x={-4} y={-13} width={mmPerPx ? 150 : 172} height={18} rx={2} fill="#111719" stroke={mmPerPx ? "#79ADA0" : "#3a4648"} />
                   <text x={2} y={0} fill="#F0F0EB" fontSize={11} className="mono">
-                    {rulerLen.toFixed(1)} px · {(rulerLen * pxToOriginal).toFixed(0)} px orig.
+                    {mmPerPx ? fmtLength(rulerLen, mmPerPx) : `${rulerLen.toFixed(1)} px · ${(rulerLen * pxToOriginal).toFixed(0)} px orig.`}
                   </text>
                 </g>
+              </g>
+            );
+          })()}
+        </svg>
+      )}
+      {box && view && (
+        <svg className="pointer-events-none absolute inset-0 h-full w-full">
+          {(() => {
+            const [ax, ay] = toScreen(Math.min(box.a[0], box.b[0]), Math.min(box.a[1], box.b[1]));
+            const [bx, by] = toScreen(Math.max(box.a[0], box.b[0]), Math.max(box.a[1], box.b[1]));
+            const w = Math.abs(box.b[0] - box.a[0]);
+            const h = Math.abs(box.b[1] - box.a[1]);
+            const label = mmPerPx ? `${(w * mmPerPx).toFixed(2)} × ${(h * mmPerPx).toFixed(2)} mm` : `${w.toFixed(0)} × ${h.toFixed(0)} px`;
+            return (
+              <g>
+                <rect x={ax} y={ay} width={bx - ax} height={by - ay} fill="rgba(233,217,180,0.08)" stroke="#E9D9B4" strokeWidth={1.25} strokeDasharray="5 4" />
+                <text x={ax} y={ay - 5} fill="#E9D9B4" fontSize={11} className="mono">{label}</text>
               </g>
             );
           })()}
@@ -241,7 +296,12 @@ export default function ImageCanvas({
               x {cursor[0].toFixed(0).padStart(4, " ")} · y {cursor[1].toFixed(0).padStart(4, " ")}
             </span>
           )}
-          {measure && <span className="rounded-[3px] border border-line bg-bg/80 px-1.5 py-0.5">Drag to measure · pixels, no physical calibration</span>}
+          {measure && (
+            <span className="rounded-[3px] border border-line bg-bg/80 px-1.5 py-0.5">
+              {mmPerPx ? `Drag to measure · 1 px = ${mmPerPx.toPrecision(3)} mm` : "Drag to measure · pixels until calibrated"}
+            </span>
+          )}
+          {region && <span className="rounded-[3px] border border-line bg-bg/80 px-1.5 py-0.5">Drag a region to check its evidence quality</span>}
         </div>
       )}
       {hud && view && (
