@@ -28,6 +28,17 @@ Built for the [OpenCV AI Competition 2026](https://opencv26.devpost.com/) (Grand
 | 3D board | Representative procedural model for navigation; **not** a scan of the imaged boards |
 | AWS | Container + CloudFormation for Lambda (Function URL) + private S3 + CloudWatch are in [`infrastructure/aws`](infrastructure/aws). See the deployment status in [docs/submission/STATUS.md](docs/submission/STATUS.md) |
 
+**Demo video (2:26, real application footage):** [`docs/submission/video/boardguard-demo.mp4`](docs/submission/video/boardguard-demo.mp4) ·
+**Sample report:** [`docs/submission/sample-report/`](docs/submission/sample-report) ·
+**Status checklist:** [`docs/submission/STATUS.md`](docs/submission/STATUS.md)
+
+| | |
+|---|---|
+| ![3D board explorer](docs/submission/screenshots/board-overview.png) | ![Region flight](docs/submission/screenshots/board-region-b.png) |
+| ![Recapture requested](docs/submission/screenshots/s02-recapture-requested.png) | ![Evidence trace](docs/submission/screenshots/evidence.png) |
+| ![Before/after split](docs/submission/screenshots/verify-split.png) | ![Difference map](docs/submission/screenshots/verify-diff.png) |
+| ![Overlay withheld](docs/submission/screenshots/verify-withheld.png) | ![System](docs/submission/screenshots/system.png) |
+
 ## Key capabilities
 
 * **Inspection workstation** — 3D board → microscope hand-off, zoom/pan/measure, analysis layers (candidates, glare mask, unusable tiles, corrosion cue mask, metallic mask), original-image toggle, live camera / USB microscope capture, uploads.
@@ -107,9 +118,10 @@ bucket (zip path) or an ECR repository with scan-on-push (container path).
 ## Tests and evaluation
 
 ```bash
-cd services/vision-api && .venv/Scripts/python -m pytest -q          # unit + API + agent tests
+cd services/vision-api && .venv/Scripts/python -m pytest -q          # 42 unit + API + agent + Lambda-handler tests
 .venv/Scripts/python ../../scripts/evaluate.py                       # writes docs/evaluation/results.md
 cd apps/web && npx tsc --noEmit && npm run lint && npx next build
+BASE_URL=http://localhost:3000 npx playwright test                   # 6 browser scenarios (needs API on :8000 + UI)
 ```
 
 Results: [docs/evaluation/results.md](docs/evaluation/results.md) (also shown on the System screen).
