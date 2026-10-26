@@ -53,6 +53,12 @@ test("scenario 03: before/after registration and confirmation", async ({ page })
   await page.getByRole("button", { name: "Confirm visual checks" }).click();
   await expect(page.getByText("Visual reinspection completed").filter({ visible: true }).first()).toBeVisible();
   await shot(page, "verify-complete");
+  // The report the TopBar links to renders with the embedded captures.
+  const report = await page.request.get(await page.getByRole("link", { name: "Report", exact: true }).getAttribute("href") ?? "");
+  expect(report.status()).toBe(200);
+  const html = await report.text();
+  expect(html).toContain("Visual reinspection completed");
+  expect(html).toContain("data:image/jpeg;base64");
 });
 
 test("scenario 04: unusable capture is rejected before analysis and stops safely", async ({ page }) => {
