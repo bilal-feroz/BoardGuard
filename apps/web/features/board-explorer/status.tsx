@@ -18,7 +18,7 @@ export const STATUS_WORD: Record<RegionStatus, string> = {
 };
 
 const SHORT_NAMES: Record<string, string> = {
-  "REGION-A": "B2B connector",
+  "REGION-A": "Battery & B2B",
   "REGION-B": "QFP controller",
   "REGION-C": "Test pads",
   "REGION-D": "PMIC cluster",

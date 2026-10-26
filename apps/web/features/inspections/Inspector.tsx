@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons";
 import { Badge, Button, fmtMs, fmtPct, KV, Meter, Panel, SectionTitle } from "@/components/ui";
-import type { Candidate, Finding, Observation, Session } from "@/lib/api";
+import { api, type Candidate, type Finding, type Observation, type Session } from "@/lib/api";
 import { REGIONS } from "@/lib/regions";
-import { useStore } from "@/lib/store";
+import { recentInspections, useStore } from "@/lib/store";
 import { FINDING_META, REG_TONE, STATE_META, TYPE_LABEL, VERDICT_TONE } from "@/lib/status";
 import { CameraButton, FixtureOption, UploadButton } from "../microscope/CaptureControls";
 
@@ -59,6 +59,7 @@ function ScenarioPicker() {
           ))}
         </div>
       </Panel>
+      <RecentInspections />
       <Panel>
         <SectionTitle>Your own capture</SectionTitle>
         <p className="mb-2.5 text-[12px] text-ink-2">
@@ -71,6 +72,42 @@ function ScenarioPicker() {
         </div>
       </Panel>
     </div>
+  );
+}
+
+function RecentInspections() {
+  const openInspection = useStore((s) => s.openInspection);
+  const busy = useStore((s) => s.busy);
+  const [items, setItems] = useState<Pick<Session, "inspection_id" | "state" | "board_region" | "created_at" | "scenario_id">[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(recentInspections().map((id) => api.get(id).then((r) => r.data).catch(() => null))).then((rs) => {
+      if (!cancelled) setItems(rs.filter((x): x is Session => !!x));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  if (!items.length) return null;
+  return (
+    <Panel>
+      <SectionTitle right={<span className="mono text-[10.5px] text-muted">{items.length}</span>}>Recent inspections</SectionTitle>
+      <ul className="-mx-1.5">
+        {items.map((s) => {
+          const meta = STATE_META[s.state] ?? { label: s.state, tone: "neutral" as const };
+          return (
+            <li key={s.inspection_id}>
+              <button type="button" disabled={!!busy} onClick={() => openInspection(s.inspection_id)}
+                className="flex w-full items-center gap-2 rounded-[3px] px-1.5 py-1.5 text-left hover:bg-raised disabled:opacity-50">
+                <span className="mono flex-1 truncate text-[11.5px] text-ink">{s.inspection_id}</span>
+                <span className="mono text-[10.5px] text-muted">{s.board_region ?? "—"}</span>
+                <Badge tone={meta.tone} className="!text-[9.5px]">{meta.label}</Badge>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </Panel>
   );
 }
 

@@ -67,6 +67,23 @@ interface State {
   submitFile: (file: Blob, name: string, kind: "upload" | "camera") => Promise<void>;
   action: (body: { type: string; candidate_id?: string; decision?: string; note?: string; result?: string }) => Promise<void>;
   reset: () => void;
+  openInspection: (id: string) => Promise<void>;
+}
+
+const RECENT_KEY = "boardguard.recent";
+
+export function recentInspections(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function rememberInspection(id: string) {
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify([id, ...recentInspections().filter((x) => x !== id)].slice(0, 8)));
+  } catch {}
 }
 
 function regionLabel(id: string | null) {
@@ -79,6 +96,7 @@ export const useStore = create<State>((set, get) => {
     set({ busy: { label, since: Date.now() }, error: null });
     try {
       const { data, ms, env } = await fn();
+      rememberInspection(data.inspection_id);
       const last = data.observations[data.observations.length - 1];
       // Surface the evidence behind a recapture request: switch on the layer that shows it.
       const codes = new Set((data.pending_action?.type === "RECAPTURE" ? data.pending_action.issues ?? [] : []).map((i) => i.code));
@@ -187,6 +205,11 @@ export const useStore = create<State>((set, get) => {
       const keep = get().selectedObsId;
       await run("Recording decision", () => api.action(s.inspection_id, body));
       set({ selectedObsId: keep });
+    },
+
+    openInspection: async (id) => {
+      const s = await run("Loading inspection", () => api.get(id));
+      if (s) set({ selectedRegionId: s.board_region, focusRegionId: s.board_region, canvasMode: s.observations.length ? "microscope" : "board", workspace: "inspect" });
     },
 
     reset: () =>
