@@ -47,8 +47,9 @@ export default function Workstation() {
     <div className="grid h-dvh min-h-[560px] w-full grid-cols-[minmax(0,1fr)] grid-rows-[44px_minmax(0,1fr)] overflow-hidden bg-bg">
       <TopBar />
       <main className="min-h-0 min-w-0 overflow-hidden">
-        {workspace === "inspect" && (
-          <div className="flex h-full min-h-0">
+        {/* The inspect workspace stays mounted so the 3D board and canvas state survive tab switches. */}
+        {(
+          <div className={workspace === "inspect" ? "flex h-full min-h-0" : "hidden"}>
             <ToolRail />
             <div className="flex min-w-0 flex-1 flex-col">
               <div className="flex min-h-0 flex-1">

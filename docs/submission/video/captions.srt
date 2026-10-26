@@ -1,0 +1,67 @@
+1
+00:00:00,846 --> 00:00:05,862
+BoardGuard — an AI microscope assistant for electronics repair technicians.
+
+2
+00:00:05,862 --> 00:00:09,632
+A representative 3D logic board for navigation. Each region links to real microscope captures.
+
+3
+00:00:09,632 --> 00:00:16,391
+Scenario 02: a fine-pitch TQFP photographed under a ring light. Processing runs live with OpenCV 5.
+
+4
+00:00:16,391 --> 00:00:22,136
+Two suspected bridges. C01 sits in a specular hotspot: 28% of its region is glare.
+
+5
+00:00:22,136 --> 00:00:28,414
+The amber layer is the OpenCV specular mask behind the decision (toggled off, then on).
+
+6
+00:00:28,414 --> 00:00:33,457
+Rule R-E1: evidence insufficient. The agent asks for a specific new look instead of guessing.
+
+7
+00:00:33,457 --> 00:00:41,664
+The technician recaptures with diffuse light. The new image is registered to the first one.
+
+8
+00:00:41,664 --> 00:00:49,666
+Reinspection: the glare suspicion is not reproduced, so its priority drops. C02 persists, so its priority rises.
+
+9
+00:00:49,666 --> 00:01:00,738
+C02 is a fibre lying across two leads. The technician decides; BoardGuard recommends a continuity check.
+
+10
+00:01:00,738 --> 00:01:09,268
+Every tool call, rule and human decision is traced, timed and exportable.
+
+11
+00:01:09,268 --> 00:01:14,986
+Each finding's reinspection outcome is its own decision, citing the rule that fired.
+
+12
+00:01:14,986 --> 00:01:31,832
+Scenario 03: before/after verification. SIFT + MAGSAC registration with measured residuals.
+
+13
+00:01:31,832 --> 00:01:38,049
+The difference map shows where the visible change is. It is linked back to each finding.
+
+14
+00:01:38,049 --> 00:01:42,772
+Visible change is documented. Electrical verification stays with the technician.
+
+15
+00:01:42,772 --> 00:01:54,739
+Scenario 05: a real rework pair shot from different angles. Alignment is unreliable, so no overlay is drawn.
+
+16
+00:01:54,739 --> 00:02:07,594
+System: the live OpenCV 5 runtime, the processing environment, tool contracts and reproducible evaluation.
+
+17
+00:02:07,594 --> 00:02:12,613
+BoardGuard: see the damage, guide the repair, verify the result. A visual aid that knows when to look again.
