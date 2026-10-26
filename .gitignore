@@ -32,3 +32,4 @@ apps/web/test-results/
 apps/web/playwright-report/
 !apps/web/.env.development
 docs/submission/video/raw.webm
+dist/

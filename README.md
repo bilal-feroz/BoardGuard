@@ -71,16 +71,25 @@ docker run --rm -p 8080:8080 boardguard     # http://localhost:8080
 
 ## Deploy to AWS
 
+Two equivalent paths, both a single CloudFormation stack:
+
 ```bash
-aws configure                                   # credentials allowed to create ECR, CloudFormation, IAM role, Lambda, S3
+aws configure          # credentials allowed to create CloudFormation, IAM role, Lambda, S3 (+ ECR for containers)
+
+# A. No Docker: Python 3.12 Lambda zip built from manylinux wheels (OpenCV 5 included)
+bash infrastructure/aws/deploy-zip.sh boardguard us-east-1
+
+# B. Container image on ECR (Dockerfile + Lambda Web Adapter)
 bash infrastructure/aws/deploy.sh boardguard us-east-1
+
+# Proof: health, runtime identity, a real processing request with timings, CloudWatch lines
 bash infrastructure/aws/verify.sh <FunctionUrl> boardguard us-east-1   # writes docs/evaluation/aws-proof.md
 ```
 
-Resources: ECR repository (scan on push, keep last 5 images), Lambda container function
-(3008 MB, 60 s, reserved concurrency 5, Lambda Web Adapter), public Function URL, private
-S3 bucket (SSE, public access blocked, 7-day expiry), CloudWatch log group (14-day retention),
-least-privilege IAM role.
+Resources: Lambda function (3008 MB, 60 s, reserved concurrency 5) serving both the UI and
+`/api/*`, public Function URL, private S3 evidence bucket (SSE, public access blocked, 7-day
+expiry), CloudWatch log group (14-day retention), least-privilege IAM role; plus a private code
+bucket (zip path) or an ECR repository with scan-on-push (container path).
 
 ## Environment variables (vision API)
 
