@@ -1,0 +1,668 @@
+{
+  "inspection_id": "BG-20261026-4D2ECF",
+  "state": "COMPLETED",
+  "events": [
+    {
+      "seq": 1,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:04.311+00:00",
+      "kind": "system",
+      "actor": "system",
+      "title": "Inspection session created",
+      "state": "CREATED",
+      "next_state": "CREATED",
+      "tool": null,
+      "inputs": {
+        "mode": "inspection",
+        "scenario": "S02-bridge-glare",
+        "board_region": "REGION-B"
+      },
+      "observations": {},
+      "trigger": null,
+      "next_action": "Await capture",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": null
+    },
+    {
+      "seq": 2,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:04.356+00:00",
+      "kind": "system",
+      "actor": "system",
+      "title": "OBS-001 received (initial)",
+      "state": "CREATED",
+      "next_state": "CAPTURE_RECEIVED",
+      "tool": null,
+      "inputs": {
+        "source": "fixture",
+        "label": "TQFP-144 under ring light (specular glare on right lead row)",
+        "provenance": "SYNTHETIC: specular highlight (Gaussian, r=50 px) added with OpenCV to a real photograph to emulate ring-light glare."
+      },
+      "observations": {
+        "size": "1597x1600",
+        "working_size": "1597x1600",
+        "format": "jpeg"
+      },
+      "trigger": null,
+      "next_action": "assess_image_quality",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 3,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:04.356+00:00",
+      "kind": "system",
+      "actor": "agent",
+      "title": "Quality assessment started",
+      "state": "CAPTURE_RECEIVED",
+      "next_state": "QUALITY_ASSESSMENT",
+      "tool": null,
+      "inputs": {},
+      "observations": {},
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 4,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:04.726+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Assess capture quality of OBS-001",
+      "state": "QUALITY_ASSESSMENT",
+      "next_state": "QUALITY_ASSESSMENT",
+      "tool": "assess_image_quality",
+      "inputs": {
+        "observation_id": "OBS-001"
+      },
+      "observations": {
+        "verdict": "ACCEPT",
+        "blur_metric": 0.3201,
+        "glare_fraction": 0.0159,
+        "clipped_bright": 0.0051,
+        "median_luminance": 49.0,
+        "unusable_tiles": "1/144",
+        "reasons": []
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 370.7,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 5,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:04.726+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "Quality gate passed (ACCEPT)",
+      "state": "QUALITY_ASSESSMENT",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "notes": []
+      },
+      "trigger": {
+        "rule": "R-Q3",
+        "text": "Capture passed the quality gate: continue to candidate analysis."
+      },
+      "next_action": "detect_visual_candidates",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 6,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.626+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Localise suspected anomalies in OBS-001",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": "detect_visual_candidates",
+      "inputs": {
+        "observation_id": "OBS-001",
+        "roi": null
+      },
+      "observations": {
+        "candidates": 2,
+        "by_type": {
+          "suspected_corrosion": 0,
+          "suspected_solder_bridge": 2
+        },
+        "lead_rows": 11
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 1899.6,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 7,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.626+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "2 suspected anomalies localised",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "CANDIDATE_DETECTED",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "candidates": [
+          "C01 suspected_solder_bridge score 0.787",
+          "C02 suspected_solder_bridge score 0.661"
+        ]
+      },
+      "trigger": null,
+      "next_action": "analyze_candidate_region",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 8,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.628+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Check local evidence for C01",
+      "state": "CANDIDATE_DETECTED",
+      "next_state": "CANDIDATE_DETECTED",
+      "tool": "analyze_candidate_region",
+      "inputs": {
+        "observation_id": "OBS-001",
+        "candidate_id": "C01",
+        "bbox": [
+          1457,
+          642,
+          138,
+          117
+        ]
+      },
+      "observations": {
+        "sufficient": false,
+        "glare_fraction": 0.2808,
+        "blur_metric": 0.4328,
+        "issues": [
+          "GLARE"
+        ]
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 1.4,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 9,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.629+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Check local evidence for C02",
+      "state": "CANDIDATE_DETECTED",
+      "next_state": "CANDIDATE_DETECTED",
+      "tool": "analyze_candidate_region",
+      "inputs": {
+        "observation_id": "OBS-001",
+        "candidate_id": "C02",
+        "bbox": [
+          479,
+          1456,
+          103,
+          144
+        ]
+      },
+      "observations": {
+        "sufficient": true,
+        "glare_fraction": 0.0709,
+        "blur_metric": 0.3749,
+        "issues": []
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 1.2,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 10,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.629+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "Evidence insufficient for a visual decision",
+      "state": "CANDIDATE_DETECTED",
+      "next_state": "EVIDENCE_INSUFFICIENT",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "C01": [
+          "GLARE: 28% of the region is specular highlight."
+        ]
+      },
+      "trigger": {
+        "rule": "R-E1",
+        "text": "A candidate's local evidence is compromised (glare/blur/exposure): request a targeted recapture instead of deciding."
+      },
+      "next_action": "request_recapture",
+      "status": "warning",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 11,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.629+00:00",
+      "kind": "action",
+      "actor": "agent",
+      "title": "Recapture requested",
+      "state": "EVIDENCE_INSUFFICIENT",
+      "next_state": "RECAPTURE_REQUESTED",
+      "tool": "request_recapture",
+      "inputs": {
+        "target": "REGION-B \u00b7 Fine-pitch controller IC (C01)",
+        "issues": [
+          "GLARE"
+        ]
+      },
+      "observations": {
+        "instruction": "Reduce specular glare on REGION-B \u00b7 Fine-pitch controller IC (C01): switch to diffuse or polarised illumination, or tilt the light 20-30 degrees away from the lens axis. Keep the same field of view so observations can be registered. A reflection can currently mimic a bridge between adjacent leads.",
+        "attempt": "1/2"
+      },
+      "trigger": {
+        "rule": "R-E1",
+        "text": "A candidate's local evidence is compromised (glare/blur/exposure): request a targeted recapture instead of deciding."
+      },
+      "next_action": "Await new capture from technician",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 12,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.665+00:00",
+      "kind": "system",
+      "actor": "system",
+      "title": "OBS-002 received (recapture)",
+      "state": "RECAPTURE_REQUESTED",
+      "next_state": "SECOND_OBSERVATION_RECEIVED",
+      "tool": null,
+      "inputs": {
+        "source": "fixture",
+        "label": "TQFP-144 recaptured with diffuse light",
+        "provenance": "Recorded photograph (real TQFP-144, 0.5 mm pitch, no glare)."
+      },
+      "observations": {
+        "size": "1597x1600",
+        "working_size": "1597x1600",
+        "format": "jpeg"
+      },
+      "trigger": null,
+      "next_action": "assess_image_quality",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 13,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.665+00:00",
+      "kind": "system",
+      "actor": "agent",
+      "title": "Quality assessment started",
+      "state": "SECOND_OBSERVATION_RECEIVED",
+      "next_state": "QUALITY_ASSESSMENT",
+      "tool": null,
+      "inputs": {},
+      "observations": {},
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 14,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:07.048+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Assess capture quality of OBS-002",
+      "state": "QUALITY_ASSESSMENT",
+      "next_state": "QUALITY_ASSESSMENT",
+      "tool": "assess_image_quality",
+      "inputs": {
+        "observation_id": "OBS-002"
+      },
+      "observations": {
+        "verdict": "ACCEPT",
+        "blur_metric": 0.32,
+        "glare_fraction": 0.0141,
+        "clipped_bright": 0.0035,
+        "median_luminance": 49.0,
+        "unusable_tiles": "0/144",
+        "reasons": []
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 382.0,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 15,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:07.048+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "Quality gate passed (ACCEPT)",
+      "state": "QUALITY_ASSESSMENT",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "notes": []
+      },
+      "trigger": {
+        "rule": "R-Q3",
+        "text": "Capture passed the quality gate: continue to candidate analysis."
+      },
+      "next_action": "detect_visual_candidates",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 16,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:08.789+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Localise suspected anomalies in OBS-002",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": "detect_visual_candidates",
+      "inputs": {
+        "observation_id": "OBS-002",
+        "roi": null
+      },
+      "observations": {
+        "candidates": 1,
+        "by_type": {
+          "suspected_corrosion": 0,
+          "suspected_solder_bridge": 1
+        },
+        "lead_rows": 11
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 1742.0,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 17,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.253+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Register OBS-002 to OBS-001",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": "register_image_pair",
+      "inputs": {
+        "reference_observation_id": "OBS-001",
+        "moving_observation_id": "OBS-002"
+      },
+      "observations": {
+        "status": "REGISTERED",
+        "method": "SIFT",
+        "inliers": 3923,
+        "inlier_ratio": 0.9985,
+        "rms_px": 0.011,
+        "coverage": 0.9757,
+        "reasons": []
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 464.1,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 18,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.256+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Compare candidates across OBS-001 and OBS-002",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": "compare_observations",
+      "inputs": {
+        "previous_observation_id": "OBS-001",
+        "new_observation_id": "OBS-002"
+      },
+      "observations": {
+        "comparable": true,
+        "outcomes": {
+          "C01": "NOT_REPRODUCED",
+          "C02": "PERSISTED"
+        },
+        "glare_change": {
+          "C01": "0.2808 -> 0.0094",
+          "C02": "0.0709 -> 0.0709"
+        }
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 2.7,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 19,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.256+00:00",
+      "kind": "system",
+      "actor": "agent",
+      "title": "Multi-view comparison complete",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "COMPARISON_COMPLETE",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "registration": "REGISTERED",
+        "comparable": true
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 20,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.256+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "Reinspection changed the assessment",
+      "state": "COMPARISON_COMPLETE",
+      "next_state": "COMPARISON_COMPLETE",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "C01": "NOT_REPRODUCED (glare 0.2808 -> 0.0094)",
+        "C02": "PERSISTED (glare 0.0709 -> 0.0709)"
+      },
+      "trigger": {
+        "rule": "R-M2",
+        "text": "Candidate persisted across observations with adequate evidence: raise priority and require technician review."
+      },
+      "next_action": "request_technician_review",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 21,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.256+00:00",
+      "kind": "action",
+      "actor": "agent",
+      "title": "Technician review requested",
+      "state": "COMPARISON_COMPLETE",
+      "next_state": "TECHNICIAN_REVIEW_REQUIRED",
+      "tool": "request_technician_review",
+      "inputs": {
+        "candidate_ids": [
+          "C01",
+          "C02"
+        ]
+      },
+      "observations": {
+        "recommended_checks": {
+          "C01": "Continuity / resistance check between the adjacent pins with a multimeter (power off); inspect under a second lighting angle.",
+          "C02": "Continuity / resistance check between the adjacent pins with a multimeter (power off); inspect under a second lighting angle."
+        }
+      },
+      "trigger": {
+        "rule": "R-M2",
+        "text": "Candidate persisted across observations with adequate evidence: raise priority and require technician review."
+      },
+      "next_action": "Await technician decision",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 22,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.297+00:00",
+      "kind": "human",
+      "actor": "technician",
+      "title": "C01 dismissed by technician",
+      "state": "TECHNICIAN_REVIEW_REQUIRED",
+      "next_state": "TECHNICIAN_REVIEW_REQUIRED",
+      "tool": "record_verification",
+      "inputs": {
+        "candidate_id": "C01",
+        "decision": "dismiss",
+        "note": "Not visible under diffuse light; reflection artefact."
+      },
+      "observations": {},
+      "trigger": {
+        "rule": "R-H1",
+        "text": "Technician decision recorded."
+      },
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": null
+    },
+    {
+      "seq": 23,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.313+00:00",
+      "kind": "human",
+      "actor": "technician",
+      "title": "C02 confirmed by technician",
+      "state": "TECHNICIAN_REVIEW_REQUIRED",
+      "next_state": "TECHNICIAN_REVIEW_REQUIRED",
+      "tool": "record_verification",
+      "inputs": {
+        "candidate_id": "C02",
+        "decision": "confirm",
+        "note": "Fibre across adjacent leads; remove and check continuity."
+      },
+      "observations": {},
+      "trigger": {
+        "rule": "R-H1",
+        "text": "Technician decision recorded."
+      },
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": null
+    },
+    {
+      "seq": 24,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.313+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "Review complete - verification pending",
+      "state": "TECHNICIAN_REVIEW_REQUIRED",
+      "next_state": "VERIFICATION_PENDING",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "confirmed": [
+          "C02"
+        ],
+        "electrical_checks": {
+          "C02": "Continuity / resistance check between the adjacent pins with a multimeter (power off); inspect under a second lighting angle."
+        }
+      },
+      "trigger": null,
+      "next_action": "After-repair capture or close",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 25,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.327+00:00",
+      "kind": "human",
+      "actor": "technician",
+      "title": "Inspection closed by technician",
+      "state": "VERIFICATION_PENDING",
+      "next_state": "VERIFICATION_PENDING",
+      "tool": null,
+      "inputs": {
+        "note": "Visual inspection closed; electrical check scheduled."
+      },
+      "observations": {},
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": null
+    },
+    {
+      "seq": 26,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.327+00:00",
+      "kind": "system",
+      "actor": "agent",
+      "title": "Inspection completed",
+      "state": "VERIFICATION_PENDING",
+      "next_state": "COMPLETED",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "summary": "1 finding(s) confirmed visually by technician; 1 dismissed; electrical verification pending."
+      },
+      "trigger": null,
+      "next_action": "Export report",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": null
+    }
+  ]
+}

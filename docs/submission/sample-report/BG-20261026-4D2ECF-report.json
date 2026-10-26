@@ -1,0 +1,2186 @@
+{
+  "report_type": "boardguard.inspection_report.v1",
+  "generated_at": "2026-10-26T17:38:10+00:00",
+  "runtime": {
+    "service": "boardguard-vision-api",
+    "version": "0.1.0",
+    "git_sha": null,
+    "environment": "local",
+    "opencv_version": "5.0.0",
+    "opencv_package": "opencv-python-headless",
+    "opencv_build": {
+      "baseline": "SSE SSE2 SSE3",
+      "dispatched_code_generation": "SSE4_1 SSE4_2 AVX FP16 AVX2 AVX512_SKX"
+    },
+    "opencv_threads": 16,
+    "numpy_version": "2.4.6",
+    "python_version": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "machine": "AMD64",
+    "cpu_count": 16,
+    "uptime_s": 25.0,
+    "storage": {
+      "backend": "local-filesystem",
+      "root": "C:\\Users\\bilal\\Desktop\\BoardGuard\\services\\vision-api\\var\\store"
+    }
+  },
+  "inspection": {
+    "inspection_id": "BG-20261026-4D2ECF",
+    "created_at": "2026-10-26T17:38:04.311+00:00",
+    "updated_at": "2026-10-26T17:38:09.327+00:00",
+    "mode": "inspection",
+    "scenario_id": "S02-bridge-glare",
+    "board_region": "REGION-B",
+    "board_region_label": "REGION-B \u00b7 Fine-pitch controller IC",
+    "state": "COMPLETED",
+    "recaptures_used": 1,
+    "max_recaptures": 2,
+    "observations": [
+      {
+        "obs_id": "OBS-001",
+        "role": "initial",
+        "capture_key": "captures/BG-20261026-4D2ECF/OBS-001.jpg",
+        "received_at": "2026-10-26T17:38:04.355+00:00",
+        "width": 1597,
+        "height": 1600,
+        "original_width": 1597,
+        "original_height": 1600,
+        "scale_to_working": 1.0,
+        "format": "jpeg",
+        "bytes": 609077,
+        "source": {
+          "kind": "fixture",
+          "fixture_id": "s02_tqfp_ringlight",
+          "label": "TQFP-144 under ring light (specular glare on right lead row)",
+          "provenance": "SYNTHETIC: specular highlight (Gaussian, r=50 px) added with OpenCV to a real photograph to emulate ring-light glare.",
+          "license": "CC BY-SA 4.0",
+          "attribution": "Phiarc / Wikimedia Commons / CC BY-SA 4.0",
+          "synthetic": true
+        },
+        "quality": {
+          "width": 1597,
+          "height": 1600,
+          "verdict": "ACCEPT",
+          "reasons": [],
+          "metrics": {
+            "largest_glare_blob_fraction": 0.0017,
+            "laplacian_variance": 3152.4788,
+            "tenengrad": 9850.9011,
+            "blur_metric": 0.3201,
+            "mean_luminance": 64.6951,
+            "median_luminance": 49.0,
+            "p01": 23.0,
+            "p99": 241.0,
+            "clipped_dark_fraction": 0.0005,
+            "clipped_bright_fraction": 0.0051,
+            "glare_fraction": 0.0159,
+            "rms_contrast": 0.1655
+          },
+          "tiles": {
+            "grid_px": 128,
+            "count": 144,
+            "judged_for_focus": 119,
+            "unusable_count": 1,
+            "unusable_fraction": 0.0069,
+            "unusable": [
+              {
+                "x": 1463,
+                "y": 666,
+                "w": 134,
+                "h": 134,
+                "reasons": [
+                  "GLARE"
+                ]
+              }
+            ]
+          },
+          "thresholds": {
+            "min_short_side_px": 320,
+            "blur_reject": 0.52,
+            "blur_marginal": 0.44,
+            "median_dark_reject": 30,
+            "clipped_dark_reject": 0.4,
+            "clipped_bright_reject": 0.18,
+            "clipped_bright_marginal": 0.07,
+            "glare_marginal": 0.035,
+            "glare_reject": 0.12,
+            "glare_hotspot_marginal": 0.01,
+            "rms_contrast_marginal": 0.07,
+            "tile_px": 128,
+            "tile_flat_std": 7.0,
+            "tile_glare_unusable": 0.22,
+            "tile_blur_unusable": 0.55,
+            "roi_glare_insufficient": 0.1,
+            "roi_blur_insufficient": 0.5
+          },
+          "glare_overlay_key": "artifacts/BG-20261026-4D2ECF/OBS-001_glare.png",
+          "duration_ms": 370.7
+        },
+        "detection": {
+          "lead_rows": [
+            {
+              "row": 0,
+              "lead_count": 22,
+              "pitch_px": 34.0,
+              "lead_width_px": 21.0,
+              "lead_length_px": 62.0,
+              "angle_deg": 0.0
+            },
+            {
+              "row": 1,
+              "lead_count": 9,
+              "pitch_px": 34.0,
+              "lead_width_px": 21.0,
+              "lead_length_px": 96.0,
+              "angle_deg": 0.0
+            },
+            {
+              "row": 2,
+              "lead_count": 36,
+              "pitch_px": 33.91,
+              "lead_width_px": 22.0,
+              "lead_length_px": 109.0,
+              "angle_deg": 178.6
+            },
+            {
+              "row": 3,
+              "lead_count": 13,
+              "pitch_px": 33.81,
+              "lead_width_px": 23.32,
+              "lead_length_px": 103.07,
+              "angle_deg": 86.9
+            },
+            {
+              "row": 4,
+              "lead_count": 24,
+              "pitch_px": 33.87,
+              "lead_width_px": 22.66,
+              "lead_length_px": 102.37,
+              "angle_deg": 87.8
+            },
+            {
+              "row": 5,
+              "lead_count": 22,
+              "pitch_px": 33.89,
+              "lead_width_px": 21.96,
+              "lead_length_px": 67.08,
+              "angle_deg": 90.0
+            },
+            {
+              "row": 6,
+              "lead_count": 6,
+              "pitch_px": 88.55,
+              "lead_width_px": 37.22,
+              "lead_length_px": 104.48,
+              "angle_deg": 90.0
+            },
+            {
+              "row": 7,
+              "lead_count": 6,
+              "pitch_px": 89.19,
+              "lead_width_px": 58.21,
+              "lead_length_px": 103.59,
+              "angle_deg": 90.0
+            },
+            {
+              "row": 8,
+              "lead_count": 5,
+              "pitch_px": 34.0,
+              "lead_width_px": 22.0,
+              "lead_length_px": 63.0,
+              "angle_deg": 90.0
+            },
+            {
+              "row": 9,
+              "lead_count": 7,
+              "pitch_px": 33.8,
+              "lead_width_px": 25.0,
+              "lead_length_px": 101.0,
+              "angle_deg": 92.1
+            },
+            {
+              "row": 10,
+              "lead_count": 7,
+              "pitch_px": 33.5,
+              "lead_width_px": 18.0,
+              "lead_length_px": 38.0,
+              "angle_deg": 90.0
+            }
+          ],
+          "params": {
+            "dog_sigma_fine": 1.0,
+            "dog_sigma_coarse": 3.0,
+            "texture_window": 15,
+            "texture_lo": 2.0,
+            "texture_hi": 6.5,
+            "coherence_max": 0.55,
+            "corrosion_threshold": 0.36,
+            "corrosion_min_area_frac": 0.002,
+            "corrosion_max_candidates": 8,
+            "metal_chroma_max": 30.0,
+            "metal_l_local_delta": 18.0,
+            "metal_l_abs": 175.0,
+            "lead_min_elongation": 1.7,
+            "row_min_leads": 4,
+            "merge_width_ratio": 1.65,
+            "gap_z_threshold": 3.5,
+            "min_lead_width_px": 7
+          },
+          "layer_keys": {
+            "corrosion_mask": "artifacts/BG-20261026-4D2ECF/OBS-001_corrosion_mask.png",
+            "metal_mask": "artifacts/BG-20261026-4D2ECF/OBS-001_metal_mask.png"
+          },
+          "duration_ms": 1899.6
+        },
+        "candidates": [
+          {
+            "type": "suspected_solder_bridge",
+            "bbox": [
+              1457,
+              642,
+              138,
+              117
+            ],
+            "polygon": [
+              [
+                1478,
+                663
+              ],
+              [
+                1574,
+                663
+              ],
+              [
+                1574,
+                738
+              ],
+              [
+                1478,
+                738
+              ]
+            ],
+            "area_px": 7200,
+            "evidence_score": 0.787,
+            "features": {
+              "row": 0,
+              "row_pitch_px": 34.0,
+              "row_lead_width_px": 21.0,
+              "mechanism": "merged_leads",
+              "span_along_row_px": 74.0,
+              "span_to_lead_width_ratio": 3.52,
+              "spanned_lead_positions": 2.18
+            },
+            "evidence_quality": {
+              "rect": [
+                1457,
+                642,
+                138,
+                117
+              ],
+              "glare_fraction": 0.2808,
+              "glare_fraction_context": 0.1457,
+              "blur_metric": 0.4328,
+              "laplacian_variance": 522.67,
+              "mean_luminance": 108.02,
+              "sufficient": false,
+              "issues": [
+                {
+                  "code": "GLARE",
+                  "detail": "28% of the region is specular highlight."
+                }
+              ]
+            },
+            "id": "C01",
+            "obs_id": "OBS-001"
+          },
+          {
+            "type": "suspected_solder_bridge",
+            "bbox": [
+              479,
+              1456,
+              103,
+              144
+            ],
+            "polygon": [
+              [
+                501,
+                1478
+              ],
+              [
+                560,
+                1478
+              ],
+              [
+                560,
+                1582
+              ],
+              [
+                501,
+                1582
+              ]
+            ],
+            "area_px": 6136,
+            "evidence_score": 0.661,
+            "features": {
+              "row": 5,
+              "row_pitch_px": 33.89,
+              "row_lead_width_px": 21.96,
+              "mechanism": "merged_leads",
+              "span_along_row_px": 62.02,
+              "span_to_lead_width_ratio": 2.82,
+              "spanned_lead_positions": 1.83
+            },
+            "evidence_quality": {
+              "rect": [
+                479,
+                1456,
+                103,
+                144
+              ],
+              "glare_fraction": 0.0709,
+              "glare_fraction_context": 0.0599,
+              "blur_metric": 0.3749,
+              "laplacian_variance": 551.15,
+              "mean_luminance": 94.81,
+              "sufficient": true,
+              "issues": []
+            },
+            "id": "C02",
+            "obs_id": "OBS-001"
+          }
+        ],
+        "comparison": null,
+        "registration": null,
+        "requested_by": {
+          "type": "CAPTURE",
+          "instruction": "Provide the first capture of the region to inspect."
+        },
+        "api_processing_ms": 2298.7
+      },
+      {
+        "obs_id": "OBS-002",
+        "role": "recapture",
+        "capture_key": "captures/BG-20261026-4D2ECF/OBS-002.jpg",
+        "received_at": "2026-10-26T17:38:06.665+00:00",
+        "width": 1597,
+        "height": 1600,
+        "original_width": 1597,
+        "original_height": 1600,
+        "scale_to_working": 1.0,
+        "format": "jpeg",
+        "bytes": 609859,
+        "source": {
+          "kind": "fixture",
+          "fixture_id": "s02_tqfp_diffuse",
+          "label": "TQFP-144 recaptured with diffuse light",
+          "provenance": "Recorded photograph (real TQFP-144, 0.5 mm pitch, no glare).",
+          "license": "CC BY-SA 4.0",
+          "attribution": "Phiarc / Wikimedia Commons / CC BY-SA 4.0",
+          "synthetic": false
+        },
+        "quality": {
+          "width": 1597,
+          "height": 1600,
+          "verdict": "ACCEPT",
+          "reasons": [],
+          "metrics": {
+            "largest_glare_blob_fraction": 0.0001,
+            "laplacian_variance": 3161.6139,
+            "tenengrad": 9921.7455,
+            "blur_metric": 0.32,
+            "mean_luminance": 64.2678,
+            "median_luminance": 49.0,
+            "p01": 23.0,
+            "p99": 237.0,
+            "clipped_dark_fraction": 0.0006,
+            "clipped_bright_fraction": 0.0035,
+            "glare_fraction": 0.0141,
+            "rms_contrast": 0.1627
+          },
+          "tiles": {
+            "grid_px": 128,
+            "count": 144,
+            "judged_for_focus": 119,
+            "unusable_count": 0,
+            "unusable_fraction": 0.0,
+            "unusable": []
+          },
+          "thresholds": {
+            "min_short_side_px": 320,
+            "blur_reject": 0.52,
+            "blur_marginal": 0.44,
+            "median_dark_reject": 30,
+            "clipped_dark_reject": 0.4,
+            "clipped_bright_reject": 0.18,
+            "clipped_bright_marginal": 0.07,
+            "glare_marginal": 0.035,
+            "glare_reject": 0.12,
+            "glare_hotspot_marginal": 0.01,
+            "rms_contrast_marginal": 0.07,
+            "tile_px": 128,
+            "tile_flat_std": 7.0,
+            "tile_glare_unusable": 0.22,
+            "tile_blur_unusable": 0.55,
+            "roi_glare_insufficient": 0.1,
+            "roi_blur_insufficient": 0.5
+          },
+          "glare_overlay_key": "artifacts/BG-20261026-4D2ECF/OBS-002_glare.png",
+          "duration_ms": 382.0
+        },
+        "detection": {
+          "lead_rows": [
+            {
+              "row": 0,
+              "lead_count": 23,
+              "pitch_px": 34.0,
+              "lead_width_px": 21.0,
+              "lead_length_px": 62.0,
+              "angle_deg": 0.0
+            },
+            {
+              "row": 1,
+              "lead_count": 9,
+              "pitch_px": 34.0,
+              "lead_width_px": 21.0,
+              "lead_length_px": 96.0,
+              "angle_deg": 0.0
+            },
+            {
+              "row": 2,
+              "lead_count": 36,
+              "pitch_px": 33.91,
+              "lead_width_px": 22.0,
+              "lead_length_px": 109.0,
+              "angle_deg": 178.6
+            },
+            {
+              "row": 3,
+              "lead_count": 13,
+              "pitch_px": 33.81,
+              "lead_width_px": 23.32,
+              "lead_length_px": 103.07,
+              "angle_deg": 86.9
+            },
+            {
+              "row": 4,
+              "lead_count": 24,
+              "pitch_px": 33.87,
+              "lead_width_px": 22.66,
+              "lead_length_px": 102.37,
+              "angle_deg": 87.8
+            },
+            {
+              "row": 5,
+              "lead_count": 22,
+              "pitch_px": 33.89,
+              "lead_width_px": 21.96,
+              "lead_length_px": 67.08,
+              "angle_deg": 90.0
+            },
+            {
+              "row": 6,
+              "lead_count": 6,
+              "pitch_px": 88.55,
+              "lead_width_px": 37.22,
+              "lead_length_px": 104.48,
+              "angle_deg": 90.0
+            },
+            {
+              "row": 7,
+              "lead_count": 6,
+              "pitch_px": 89.19,
+              "lead_width_px": 58.21,
+              "lead_length_px": 103.59,
+              "angle_deg": 90.0
+            },
+            {
+              "row": 8,
+              "lead_count": 5,
+              "pitch_px": 34.0,
+              "lead_width_px": 22.0,
+              "lead_length_px": 63.0,
+              "angle_deg": 90.0
+            },
+            {
+              "row": 9,
+              "lead_count": 7,
+              "pitch_px": 33.8,
+              "lead_width_px": 25.0,
+              "lead_length_px": 101.0,
+              "angle_deg": 92.1
+            },
+            {
+              "row": 10,
+              "lead_count": 7,
+              "pitch_px": 33.5,
+              "lead_width_px": 18.0,
+              "lead_length_px": 38.0,
+              "angle_deg": 90.0
+            }
+          ],
+          "params": {
+            "dog_sigma_fine": 1.0,
+            "dog_sigma_coarse": 3.0,
+            "texture_window": 15,
+            "texture_lo": 2.0,
+            "texture_hi": 6.5,
+            "coherence_max": 0.55,
+            "corrosion_threshold": 0.36,
+            "corrosion_min_area_frac": 0.002,
+            "corrosion_max_candidates": 8,
+            "metal_chroma_max": 30.0,
+            "metal_l_local_delta": 18.0,
+            "metal_l_abs": 175.0,
+            "lead_min_elongation": 1.7,
+            "row_min_leads": 4,
+            "merge_width_ratio": 1.65,
+            "gap_z_threshold": 3.5,
+            "min_lead_width_px": 7
+          },
+          "layer_keys": {
+            "corrosion_mask": "artifacts/BG-20261026-4D2ECF/OBS-002_corrosion_mask.png",
+            "metal_mask": "artifacts/BG-20261026-4D2ECF/OBS-002_metal_mask.png"
+          },
+          "duration_ms": 1742.0
+        },
+        "candidates": [
+          {
+            "id": "C01",
+            "type": "suspected_solder_bridge",
+            "bbox": [
+              1457,
+              642,
+              138,
+              117
+            ],
+            "mapped_only": true,
+            "reinspection_outcome": "NOT_REPRODUCED",
+            "evidence_quality": {
+              "rect": [
+                1457,
+                642,
+                138,
+                117
+              ],
+              "glare_fraction": 0.0094,
+              "glare_fraction_context": 0.0086,
+              "blur_metric": 0.4167,
+              "laplacian_variance": 444.94,
+              "mean_luminance": 74.12,
+              "sufficient": true,
+              "issues": []
+            },
+            "polygon": null,
+            "evidence_score": null,
+            "features": {}
+          },
+          {
+            "type": "suspected_solder_bridge",
+            "bbox": [
+              479,
+              1456,
+              103,
+              144
+            ],
+            "polygon": [
+              [
+                501,
+                1478
+              ],
+              [
+                560,
+                1478
+              ],
+              [
+                560,
+                1582
+              ],
+              [
+                501,
+                1582
+              ]
+            ],
+            "area_px": 6136,
+            "evidence_score": 0.661,
+            "features": {
+              "row": 5,
+              "row_pitch_px": 33.89,
+              "row_lead_width_px": 21.96,
+              "mechanism": "merged_leads",
+              "span_along_row_px": 62.02,
+              "span_to_lead_width_ratio": 2.82,
+              "spanned_lead_positions": 1.83
+            },
+            "evidence_quality": {
+              "rect": [
+                479,
+                1456,
+                103,
+                144
+              ],
+              "glare_fraction": 0.0709,
+              "glare_fraction_context": 0.0599,
+              "blur_metric": 0.3749,
+              "laplacian_variance": 551.15,
+              "mean_luminance": 94.81,
+              "sufficient": true,
+              "issues": []
+            },
+            "id": "C02",
+            "obs_id": "OBS-002",
+            "detection_id": "C01",
+            "reinspection_outcome": "PERSISTED"
+          }
+        ],
+        "comparison": {
+          "registration_status": "REGISTERED",
+          "comparable": true,
+          "per_candidate": [
+            {
+              "candidate_id": "C01",
+              "type": "suspected_solder_bridge",
+              "outcome": "NOT_REPRODUCED",
+              "detail": "Not re-detected in the new observation despite sufficient local quality.",
+              "mapped_bbox": [
+                1457,
+                642,
+                138,
+                117
+              ],
+              "matched_new_candidate": null,
+              "match_iou": null,
+              "glare_before": 0.2808,
+              "glare_after": 0.0094,
+              "blur_before": 0.4328,
+              "blur_after": 0.4167,
+              "evidence_score_before": 0.787,
+              "evidence_score_after": null,
+              "evidence_quality_after": {
+                "rect": [
+                  1457,
+                  642,
+                  138,
+                  117
+                ],
+                "glare_fraction": 0.0094,
+                "glare_fraction_context": 0.0086,
+                "blur_metric": 0.4167,
+                "laplacian_variance": 444.94,
+                "mean_luminance": 74.12,
+                "sufficient": true,
+                "issues": []
+              }
+            },
+            {
+              "candidate_id": "C02",
+              "type": "suspected_solder_bridge",
+              "outcome": "PERSISTED",
+              "detail": "Re-detected as C01 (IoU 1.00) with sufficient local quality.",
+              "mapped_bbox": [
+                479,
+                1456,
+                103,
+                144
+              ],
+              "matched_new_candidate": "C01",
+              "match_iou": 1.0,
+              "glare_before": 0.0709,
+              "glare_after": 0.0709,
+              "blur_before": 0.3749,
+              "blur_after": 0.3749,
+              "evidence_score_before": 0.661,
+              "evidence_score_after": 0.661,
+              "evidence_quality_after": {
+                "rect": [
+                  479,
+                  1456,
+                  103,
+                  144
+                ],
+                "glare_fraction": 0.0709,
+                "glare_fraction_context": 0.0599,
+                "blur_metric": 0.3749,
+                "laplacian_variance": 551.15,
+                "mean_luminance": 94.81,
+                "sufficient": true,
+                "issues": []
+              }
+            }
+          ],
+          "new_candidates_unmatched": [],
+          "duration_ms": 2.7
+        },
+        "registration": {
+          "attempts": [
+            {
+              "method": "SIFT",
+              "keypoints_ref": 4000,
+              "keypoints_mov": 4000,
+              "ratio_matches": 3929,
+              "inliers": 3923,
+              "inlier_ratio": 0.9985,
+              "rms_reprojection_px": 0.011,
+              "inlier_coverage": 0.9757,
+              "outcome": "estimated"
+            }
+          ],
+          "criteria": {
+            "work_side_px": 1100,
+            "ratio_test": 0.75,
+            "ransac_reproj_px": 4.0,
+            "min_inliers": 25,
+            "min_inlier_ratio": 0.25,
+            "max_rms_px": 3.0,
+            "min_coverage": 0.12,
+            "scale_range": [
+              0.4,
+              2.5
+            ],
+            "max_perspective": 0.0025,
+            "weak_inliers": 60,
+            "weak_inlier_ratio": 0.4,
+            "weak_coverage": 0.25
+          },
+          "ref_size": [
+            1597,
+            1600
+          ],
+          "mov_size": [
+            1597,
+            1600
+          ],
+          "status": "REGISTERED",
+          "reasons": [],
+          "method": "SIFT",
+          "ratio_matches": 3929,
+          "inliers": 3923,
+          "inlier_ratio": 0.9985,
+          "rms_reprojection_px": 0.011,
+          "inlier_coverage": 0.9757,
+          "homography": [
+            [
+              0.99999945,
+              -4e-07,
+              0.00012501
+            ],
+            [
+              -1.4e-06,
+              0.99999858,
+              0.00101672
+            ],
+            [
+              -0.0,
+              -0.0,
+              1.0
+            ]
+          ],
+          "inlier_points_sample": [
+            [
+              111.4000015258789,
+              839.9000244140625
+            ],
+            [
+              411.8999938964844,
+              112.69999694824219
+            ],
+            [
+              337.29998779296875,
+              92.9000015258789
+            ],
+            [
+              939.2999877929688,
+              1498.5999755859375
+            ],
+            [
+              1037.5,
+              118.69999694824219
+            ],
+            [
+              509.5,
+              823.0999755859375
+            ],
+            [
+              749.2999877929688,
+              100.4000015258789
+            ],
+            [
+              515.5,
+              1496.0999755859375
+            ],
+            [
+              854.2999877929688,
+              1496.5999755859375
+            ],
+            [
+              1054.199951171875,
+              100.19999694824219
+            ],
+            [
+              293.70001220703125,
+              118.80000305175781
+            ],
+            [
+              24.100000381469727,
+              242.1999969482422
+            ],
+            [
+              328.79998779296875,
+              1149.9000244140625
+            ],
+            [
+              28.399999618530273,
+              1055.0
+            ],
+            [
+              326.6000061035156,
+              605.0
+            ],
+            [
+              32.70000076293945,
+              1324.4000244140625
+            ],
+            [
+              836.0,
+              41.900001525878906
+            ],
+            [
+              39.5,
+              393.70001220703125
+            ],
+            [
+              41.70000076293945,
+              1117.9000244140625
+            ],
+            [
+              828.9000244140625,
+              50.79999923706055
+            ],
+            [
+              46.0,
+              648.4000244140625
+            ],
+            [
+              47.79999923706055,
+              922.2000122070312
+            ],
+            [
+              1017.2999877929688,
+              1565.5
+            ],
+            [
+              51.099998474121094,
+              1306.300048828125
+            ],
+            [
+              1015.2999877929688,
+              1480.699951171875
+            ],
+            [
+              489.20001220703125,
+              1488.5999755859375
+            ],
+            [
+              447.6000061035156,
+              32.099998474121094
+            ],
+            [
+              1108.5999755859375,
+              1499.4000244140625
+            ],
+            [
+              815.2000122070312,
+              1491.699951171875
+            ],
+            [
+              1009.2999877929688,
+              1484.0999755859375
+            ],
+            [
+              1587.800048828125,
+              35.900001525878906
+            ],
+            [
+              1573.5,
+              462.29998779296875
+            ],
+            [
+              1568.0,
+              382.20001220703125
+            ],
+            [
+              1561.699951171875,
+              1323.9000244140625
+            ],
+            [
+              1559.0,
+              503.79998779296875
+            ],
+            [
+              717.9000244140625,
+              29.399999618530273
+            ],
+            [
+              1554.5,
+              920.0999755859375
+            ],
+            [
+              981.7000122070312,
+              44.5
+            ],
+            [
+              914.5999755859375,
+              41.0
+            ],
+            [
+              359.70001220703125,
+              1574.800048828125
+            ],
+            [
+              93.4000015258789,
+              1007.2999877929688
+            ],
+            [
+              94.80000305175781,
+              654.2000122070312
+            ],
+            [
+              95.9000015258789,
+              424.70001220703125
+            ],
+            [
+              1500.800048828125,
+              1255.800048828125
+            ],
+            [
+              104.0,
+              746.0999755859375
+            ],
+            [
+              1500.0999755859375,
+              1120.0999755859375
+            ],
+            [
+              106.69999694824219,
+              1254.199951171875
+            ],
+            [
+              111.0999984741211,
+              264.6000061035156
+            ],
+            [
+              728.7000122070312,
+              416.29998779296875
+            ],
+            [
+              611.7999877929688,
+              1570.699951171875
+            ],
+            [
+              1496.5,
+              238.89999389648438
+            ],
+            [
+              1495.699951171875,
+              272.8999938964844
+            ],
+            [
+              121.5,
+              1169.5999755859375
+            ],
+            [
+              124.0,
+              891.7000122070312
+            ],
+            [
+              984.4000244140625,
+              1558.4000244140625
+            ],
+            [
+              1485.4000244140625,
+              1297.199951171875
+            ],
+            [
+              1482.199951171875,
+              16.200000762939453
+            ],
+            [
+              1199.5999755859375,
+              1484.5999755859375
+            ],
+            [
+              735.9000244140625,
+              1499.300048828125
+            ],
+            [
+              1369.300048828125,
+              1487.800048828125
+            ],
+            [
+              1352.699951171875,
+              43.29999923706055
+            ],
+            [
+              1320.699951171875,
+              1481.5
+            ],
+            [
+              901.4000244140625,
+              98.5999984741211
+            ],
+            [
+              1287.9000244140625,
+              1568.0
+            ],
+            [
+              1273.5999755859375,
+              98.19999694824219
+            ],
+            [
+              665.0,
+              119.5999984741211
+            ],
+            [
+              843.5,
+              107.69999694824219
+            ],
+            [
+              441.79998779296875,
+              30.399999618530273
+            ],
+            [
+              1470.5,
+              67.5999984741211
+            ],
+            [
+              880.2000122070312,
+              71.0999984741211
+            ],
+            [
+              574.4000244140625,
+              926.7000122070312
+            ],
+            [
+              643.0999755859375,
+              1521.4000244140625
+            ],
+            [
+              1344.800048828125,
+              38.099998474121094
+            ],
+            [
+              600.0999755859375,
+              115.30000305175781
+            ],
+            [
+              770.7999877929688,
+              291.0
+            ],
+            [
+              29.700000762939453,
+              1280.0
+            ],
+            [
+              342.5,
+              1521.699951171875
+            ],
+            [
+              41.20000076293945,
+              509.0
+            ],
+            [
+              1261.0,
+              1548.0
+            ],
+            [
+              445.20001220703125,
+              545.5999755859375
+            ],
+            [
+              589.9000244140625,
+              962.0999755859375
+            ],
+            [
+              923.0999755859375,
+              1035.300048828125
+            ],
+            [
+              947.4000244140625,
+              70.69999694824219
+            ],
+            [
+              749.5,
+              116.0
+            ],
+            [
+              266.29998779296875,
+              1481.0
+            ],
+            [
+              863.7999877929688,
+              756.7000122070312
+            ],
+            [
+              780.9000244140625,
+              1523.5
+            ],
+            [
+              941.0999755859375,
+              599.2999877929688
+            ],
+            [
+              867.7999877929688,
+              540.4000244140625
+            ],
+            [
+              474.70001220703125,
+              39.400001525878906
+            ],
+            [
+              72.9000015258789,
+              444.3999938964844
+            ],
+            [
+              75.0,
+              1018.4000244140625
+            ],
+            [
+              1015.7999877929688,
+              70.5
+            ],
+            [
+              1558.300048828125,
+              310.70001220703125
+            ],
+            [
+              1552.9000244140625,
+              1146.699951171875
+            ],
+            [
+              1542.4000244140625,
+              160.60000610351562
+            ],
+            [
+              1527.5999755859375,
+              816.2000122070312
+            ],
+            [
+              1519.5999755859375,
+              335.3999938964844
+            ],
+            [
+              1130.4000244140625,
+              119.4000015258789
+            ],
+            [
+              983.9000244140625,
+              1523.0
+            ],
+            [
+              119.4000015258789,
+              1534.800048828125
+            ],
+            [
+              1488.0999755859375,
+              1187.0
+            ],
+            [
+              306.20001220703125,
+              738.4000244140625
+            ],
+            [
+              689.0,
+              432.1000061035156
+            ],
+            [
+              382.8999938964844,
+              1036.300048828125
+            ],
+            [
+              381.6000061035156,
+              1106.4000244140625
+            ],
+            [
+              695.0999755859375,
+              1446.5
+            ],
+            [
+              1221.9000244140625,
+              1543.5
+            ],
+            [
+              970.7000122070312,
+              721.7999877929688
+            ],
+            [
+              46.599998474121094,
+              1387.199951171875
+            ],
+            [
+              983.5999755859375,
+              1572.199951171875
+            ],
+            [
+              373.6000061035156,
+              69.19999694824219
+            ],
+            [
+              479.0,
+              77.0
+            ],
+            [
+              886.2999877929688,
+              650.0999755859375
+            ],
+            [
+              885.0,
+              115.19999694824219
+            ],
+            [
+              893.7000122070312,
+              697.5
+            ],
+            [
+              1107.199951171875,
+              908.2000122070312
+            ],
+            [
+              1139.300048828125,
+              533.7999877929688
+            ],
+            [
+              506.29998779296875,
+              740.4000244140625
+            ],
+            [
+              389.1000061035156,
+              1185.5999755859375
+            ],
+            [
+              503.3999938964844,
+              1109.5
+            ],
+            [
+              396.29998779296875,
+              1223.0
+            ],
+            [
+              399.8999938964844,
+              905.0999755859375
+            ],
+            [
+              402.20001220703125,
+              1220.800048828125
+            ],
+            [
+              427.5,
+              360.3999938964844
+            ],
+            [
+              872.7000122070312,
+              873.0
+            ],
+            [
+              843.4000244140625,
+              934.2999877929688
+            ],
+            [
+              990.5,
+              1484.699951171875
+            ],
+            [
+              414.20001220703125,
+              893.2000122070312
+            ],
+            [
+              416.79998779296875,
+              1532.0
+            ],
+            [
+              468.0,
+              545.2000122070312
+            ],
+            [
+              1321.699951171875,
+              1571.300048828125
+            ],
+            [
+              343.79998779296875,
+              1570.300048828125
+            ],
+            [
+              675.4000244140625,
+              647.2999877929688
+            ],
+            [
+              851.0999755859375,
+              59.099998474121094
+            ],
+            [
+              1527.199951171875,
+              1121.199951171875
+            ],
+            [
+              1090.5999755859375,
+              293.1000061035156
+            ],
+            [
+              85.5,
+              645.2999877929688
+            ],
+            [
+              1555.300048828125,
+              814.2000122070312
+            ],
+            [
+              917.9000244140625,
+              1544.800048828125
+            ],
+            [
+              1562.4000244140625,
+              109.0
+            ],
+            [
+              1568.5,
+              1115.4000244140625
+            ],
+            [
+              483.8999938964844,
+              1535.5
+            ],
+            [
+              618.5999755859375,
+              59.79999923706055
+            ],
+            [
+              1112.0999755859375,
+              36.599998474121094
+            ],
+            [
+              1251.300048828125,
+              316.1000061035156
+            ],
+            [
+              25.0,
+              779.5999755859375
+            ],
+            [
+              1166.199951171875,
+              533.5
+            ],
+            [
+              1531.300048828125,
+              306.8999938964844
+            ],
+            [
+              485.3999938964844,
+              899.7999877929688
+            ],
+            [
+              342.0,
+              662.5999755859375
+            ]
+          ],
+          "duration_ms": 464.1,
+          "reference_obs_id": "OBS-001"
+        },
+        "requested_by": {
+          "type": "RECAPTURE",
+          "instruction": "Reduce specular glare on REGION-B \u00b7 Fine-pitch controller IC (C01): switch to diffuse or polarised illumination, or tilt the light 20-30 degrees away from the lens axis. Keep the same field of view so observations can be registered. A reflection can currently mimic a bridge between adjacent leads.",
+          "issues": [
+            {
+              "code": "GLARE",
+              "detail": "28% of the region is specular highlight."
+            }
+          ],
+          "rule": "R-E1",
+          "reference_obs_id": "OBS-001",
+          "target_candidates": [
+            "C01"
+          ],
+          "target_bboxes": [
+            [
+              1457,
+              642,
+              138,
+              117
+            ]
+          ],
+          "attempt": 1,
+          "max_attempts": 2
+        },
+        "api_processing_ms": 2617.2
+      }
+    ],
+    "findings": [
+      {
+        "id": "C01",
+        "type": "suspected_solder_bridge",
+        "status": "TECHNICIAN_DISMISSED",
+        "priority": "LOW",
+        "latest_obs_id": "OBS-002",
+        "bbox": [
+          1457,
+          642,
+          138,
+          117
+        ],
+        "evidence_score": 0.787,
+        "history": [
+          {
+            "obs_id": "OBS-001",
+            "outcome": "DETECTED",
+            "evidence_quality_sufficient": false
+          },
+          {
+            "obs_id": "OBS-002",
+            "outcome": "NOT_REPRODUCED",
+            "detail": "Not re-detected in the new observation despite sufficient local quality.",
+            "glare_before": 0.2808,
+            "glare_after": 0.0094
+          }
+        ],
+        "recommended_check": "Continuity / resistance check between the adjacent pins with a multimeter (power off); inspect under a second lighting angle.",
+        "technician": {
+          "decision": "dismiss",
+          "note": "Not visible under diffuse light; reflection artefact.",
+          "timestamp": "2026-10-26T17:38:09.297+00:00"
+        }
+      },
+      {
+        "id": "C02",
+        "type": "suspected_solder_bridge",
+        "status": "TECHNICIAN_CONFIRMED",
+        "priority": "HIGH",
+        "latest_obs_id": "OBS-002",
+        "bbox": [
+          479,
+          1456,
+          103,
+          144
+        ],
+        "evidence_score": 0.661,
+        "history": [
+          {
+            "obs_id": "OBS-001",
+            "outcome": "DETECTED",
+            "evidence_quality_sufficient": true
+          },
+          {
+            "obs_id": "OBS-002",
+            "outcome": "PERSISTED",
+            "detail": "Re-detected as C01 (IoU 1.00) with sufficient local quality.",
+            "glare_before": 0.0709,
+            "glare_after": 0.0709
+          }
+        ],
+        "recommended_check": "Continuity / resistance check between the adjacent pins with a multimeter (power off); inspect under a second lighting angle.",
+        "technician": {
+          "decision": "confirm",
+          "note": "Fibre across adjacent leads; remove and check continuity.",
+          "timestamp": "2026-10-26T17:38:09.313+00:00"
+        }
+      }
+    ],
+    "verification": null,
+    "technician_log": [
+      {
+        "timestamp": "2026-10-26T17:38:09.297+00:00",
+        "type": "candidate_decision",
+        "note": "Not visible under diffuse light; reflection artefact.",
+        "actor": "technician (unauthenticated demo user)",
+        "candidate_id": "C01",
+        "decision": "dismiss"
+      },
+      {
+        "timestamp": "2026-10-26T17:38:09.313+00:00",
+        "type": "candidate_decision",
+        "note": "Fibre across adjacent leads; remove and check continuity.",
+        "actor": "technician (unauthenticated demo user)",
+        "candidate_id": "C02",
+        "decision": "confirm"
+      },
+      {
+        "timestamp": "2026-10-26T17:38:09.327+00:00",
+        "type": "finalize",
+        "note": "Visual inspection closed; electrical check scheduled.",
+        "actor": "technician (unauthenticated demo user)"
+      }
+    ],
+    "pending_action": null,
+    "outcome": {
+      "status": "COMPLETED",
+      "summary": "1 finding(s) confirmed visually by technician; 1 dismissed; electrical verification pending."
+    }
+  },
+  "trace": [
+    {
+      "seq": 1,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:04.311+00:00",
+      "kind": "system",
+      "actor": "system",
+      "title": "Inspection session created",
+      "state": "CREATED",
+      "next_state": "CREATED",
+      "tool": null,
+      "inputs": {
+        "mode": "inspection",
+        "scenario": "S02-bridge-glare",
+        "board_region": "REGION-B"
+      },
+      "observations": {},
+      "trigger": null,
+      "next_action": "Await capture",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": null
+    },
+    {
+      "seq": 2,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:04.356+00:00",
+      "kind": "system",
+      "actor": "system",
+      "title": "OBS-001 received (initial)",
+      "state": "CREATED",
+      "next_state": "CAPTURE_RECEIVED",
+      "tool": null,
+      "inputs": {
+        "source": "fixture",
+        "label": "TQFP-144 under ring light (specular glare on right lead row)",
+        "provenance": "SYNTHETIC: specular highlight (Gaussian, r=50 px) added with OpenCV to a real photograph to emulate ring-light glare."
+      },
+      "observations": {
+        "size": "1597x1600",
+        "working_size": "1597x1600",
+        "format": "jpeg"
+      },
+      "trigger": null,
+      "next_action": "assess_image_quality",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 3,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:04.356+00:00",
+      "kind": "system",
+      "actor": "agent",
+      "title": "Quality assessment started",
+      "state": "CAPTURE_RECEIVED",
+      "next_state": "QUALITY_ASSESSMENT",
+      "tool": null,
+      "inputs": {},
+      "observations": {},
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 4,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:04.726+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Assess capture quality of OBS-001",
+      "state": "QUALITY_ASSESSMENT",
+      "next_state": "QUALITY_ASSESSMENT",
+      "tool": "assess_image_quality",
+      "inputs": {
+        "observation_id": "OBS-001"
+      },
+      "observations": {
+        "verdict": "ACCEPT",
+        "blur_metric": 0.3201,
+        "glare_fraction": 0.0159,
+        "clipped_bright": 0.0051,
+        "median_luminance": 49.0,
+        "unusable_tiles": "1/144",
+        "reasons": []
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 370.7,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 5,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:04.726+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "Quality gate passed (ACCEPT)",
+      "state": "QUALITY_ASSESSMENT",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "notes": []
+      },
+      "trigger": {
+        "rule": "R-Q3",
+        "text": "Capture passed the quality gate: continue to candidate analysis."
+      },
+      "next_action": "detect_visual_candidates",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 6,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.626+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Localise suspected anomalies in OBS-001",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": "detect_visual_candidates",
+      "inputs": {
+        "observation_id": "OBS-001",
+        "roi": null
+      },
+      "observations": {
+        "candidates": 2,
+        "by_type": {
+          "suspected_corrosion": 0,
+          "suspected_solder_bridge": 2
+        },
+        "lead_rows": 11
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 1899.6,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 7,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.626+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "2 suspected anomalies localised",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "CANDIDATE_DETECTED",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "candidates": [
+          "C01 suspected_solder_bridge score 0.787",
+          "C02 suspected_solder_bridge score 0.661"
+        ]
+      },
+      "trigger": null,
+      "next_action": "analyze_candidate_region",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 8,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.628+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Check local evidence for C01",
+      "state": "CANDIDATE_DETECTED",
+      "next_state": "CANDIDATE_DETECTED",
+      "tool": "analyze_candidate_region",
+      "inputs": {
+        "observation_id": "OBS-001",
+        "candidate_id": "C01",
+        "bbox": [
+          1457,
+          642,
+          138,
+          117
+        ]
+      },
+      "observations": {
+        "sufficient": false,
+        "glare_fraction": 0.2808,
+        "blur_metric": 0.4328,
+        "issues": [
+          "GLARE"
+        ]
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 1.4,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 9,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.629+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Check local evidence for C02",
+      "state": "CANDIDATE_DETECTED",
+      "next_state": "CANDIDATE_DETECTED",
+      "tool": "analyze_candidate_region",
+      "inputs": {
+        "observation_id": "OBS-001",
+        "candidate_id": "C02",
+        "bbox": [
+          479,
+          1456,
+          103,
+          144
+        ]
+      },
+      "observations": {
+        "sufficient": true,
+        "glare_fraction": 0.0709,
+        "blur_metric": 0.3749,
+        "issues": []
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 1.2,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 10,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.629+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "Evidence insufficient for a visual decision",
+      "state": "CANDIDATE_DETECTED",
+      "next_state": "EVIDENCE_INSUFFICIENT",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "C01": [
+          "GLARE: 28% of the region is specular highlight."
+        ]
+      },
+      "trigger": {
+        "rule": "R-E1",
+        "text": "A candidate's local evidence is compromised (glare/blur/exposure): request a targeted recapture instead of deciding."
+      },
+      "next_action": "request_recapture",
+      "status": "warning",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 11,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.629+00:00",
+      "kind": "action",
+      "actor": "agent",
+      "title": "Recapture requested",
+      "state": "EVIDENCE_INSUFFICIENT",
+      "next_state": "RECAPTURE_REQUESTED",
+      "tool": "request_recapture",
+      "inputs": {
+        "target": "REGION-B \u00b7 Fine-pitch controller IC (C01)",
+        "issues": [
+          "GLARE"
+        ]
+      },
+      "observations": {
+        "instruction": "Reduce specular glare on REGION-B \u00b7 Fine-pitch controller IC (C01): switch to diffuse or polarised illumination, or tilt the light 20-30 degrees away from the lens axis. Keep the same field of view so observations can be registered. A reflection can currently mimic a bridge between adjacent leads.",
+        "attempt": "1/2"
+      },
+      "trigger": {
+        "rule": "R-E1",
+        "text": "A candidate's local evidence is compromised (glare/blur/exposure): request a targeted recapture instead of deciding."
+      },
+      "next_action": "Await new capture from technician",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 12,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.665+00:00",
+      "kind": "system",
+      "actor": "system",
+      "title": "OBS-002 received (recapture)",
+      "state": "RECAPTURE_REQUESTED",
+      "next_state": "SECOND_OBSERVATION_RECEIVED",
+      "tool": null,
+      "inputs": {
+        "source": "fixture",
+        "label": "TQFP-144 recaptured with diffuse light",
+        "provenance": "Recorded photograph (real TQFP-144, 0.5 mm pitch, no glare)."
+      },
+      "observations": {
+        "size": "1597x1600",
+        "working_size": "1597x1600",
+        "format": "jpeg"
+      },
+      "trigger": null,
+      "next_action": "assess_image_quality",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 13,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:06.665+00:00",
+      "kind": "system",
+      "actor": "agent",
+      "title": "Quality assessment started",
+      "state": "SECOND_OBSERVATION_RECEIVED",
+      "next_state": "QUALITY_ASSESSMENT",
+      "tool": null,
+      "inputs": {},
+      "observations": {},
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 14,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:07.048+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Assess capture quality of OBS-002",
+      "state": "QUALITY_ASSESSMENT",
+      "next_state": "QUALITY_ASSESSMENT",
+      "tool": "assess_image_quality",
+      "inputs": {
+        "observation_id": "OBS-002"
+      },
+      "observations": {
+        "verdict": "ACCEPT",
+        "blur_metric": 0.32,
+        "glare_fraction": 0.0141,
+        "clipped_bright": 0.0035,
+        "median_luminance": 49.0,
+        "unusable_tiles": "0/144",
+        "reasons": []
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 382.0,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 15,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:07.048+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "Quality gate passed (ACCEPT)",
+      "state": "QUALITY_ASSESSMENT",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "notes": []
+      },
+      "trigger": {
+        "rule": "R-Q3",
+        "text": "Capture passed the quality gate: continue to candidate analysis."
+      },
+      "next_action": "detect_visual_candidates",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 16,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:08.789+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Localise suspected anomalies in OBS-002",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": "detect_visual_candidates",
+      "inputs": {
+        "observation_id": "OBS-002",
+        "roi": null
+      },
+      "observations": {
+        "candidates": 1,
+        "by_type": {
+          "suspected_corrosion": 0,
+          "suspected_solder_bridge": 1
+        },
+        "lead_rows": 11
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 1742.0,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 17,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.253+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Register OBS-002 to OBS-001",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": "register_image_pair",
+      "inputs": {
+        "reference_observation_id": "OBS-001",
+        "moving_observation_id": "OBS-002"
+      },
+      "observations": {
+        "status": "REGISTERED",
+        "method": "SIFT",
+        "inliers": 3923,
+        "inlier_ratio": 0.9985,
+        "rms_px": 0.011,
+        "coverage": 0.9757,
+        "reasons": []
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 464.1,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 18,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.256+00:00",
+      "kind": "tool",
+      "actor": "agent",
+      "title": "Compare candidates across OBS-001 and OBS-002",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "INSPECTION_REQUIRED",
+      "tool": "compare_observations",
+      "inputs": {
+        "previous_observation_id": "OBS-001",
+        "new_observation_id": "OBS-002"
+      },
+      "observations": {
+        "comparable": true,
+        "outcomes": {
+          "C01": "NOT_REPRODUCED",
+          "C02": "PERSISTED"
+        },
+        "glare_change": {
+          "C01": "0.2808 -> 0.0094",
+          "C02": "0.0709 -> 0.0709"
+        }
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": 2.7,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 19,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.256+00:00",
+      "kind": "system",
+      "actor": "agent",
+      "title": "Multi-view comparison complete",
+      "state": "INSPECTION_REQUIRED",
+      "next_state": "COMPARISON_COMPLETE",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "registration": "REGISTERED",
+        "comparable": true
+      },
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 20,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.256+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "Reinspection changed the assessment",
+      "state": "COMPARISON_COMPLETE",
+      "next_state": "COMPARISON_COMPLETE",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "C01": "NOT_REPRODUCED (glare 0.2808 -> 0.0094)",
+        "C02": "PERSISTED (glare 0.0709 -> 0.0709)"
+      },
+      "trigger": {
+        "rule": "R-M2",
+        "text": "Candidate persisted across observations with adequate evidence: raise priority and require technician review."
+      },
+      "next_action": "request_technician_review",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 21,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.256+00:00",
+      "kind": "action",
+      "actor": "agent",
+      "title": "Technician review requested",
+      "state": "COMPARISON_COMPLETE",
+      "next_state": "TECHNICIAN_REVIEW_REQUIRED",
+      "tool": "request_technician_review",
+      "inputs": {
+        "candidate_ids": [
+          "C01",
+          "C02"
+        ]
+      },
+      "observations": {
+        "recommended_checks": {
+          "C01": "Continuity / resistance check between the adjacent pins with a multimeter (power off); inspect under a second lighting angle.",
+          "C02": "Continuity / resistance check between the adjacent pins with a multimeter (power off); inspect under a second lighting angle."
+        }
+      },
+      "trigger": {
+        "rule": "R-M2",
+        "text": "Candidate persisted across observations with adequate evidence: raise priority and require technician review."
+      },
+      "next_action": "Await technician decision",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-002"
+    },
+    {
+      "seq": 22,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.297+00:00",
+      "kind": "human",
+      "actor": "technician",
+      "title": "C01 dismissed by technician",
+      "state": "TECHNICIAN_REVIEW_REQUIRED",
+      "next_state": "TECHNICIAN_REVIEW_REQUIRED",
+      "tool": "record_verification",
+      "inputs": {
+        "candidate_id": "C01",
+        "decision": "dismiss",
+        "note": "Not visible under diffuse light; reflection artefact."
+      },
+      "observations": {},
+      "trigger": {
+        "rule": "R-H1",
+        "text": "Technician decision recorded."
+      },
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": null
+    },
+    {
+      "seq": 23,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.313+00:00",
+      "kind": "human",
+      "actor": "technician",
+      "title": "C02 confirmed by technician",
+      "state": "TECHNICIAN_REVIEW_REQUIRED",
+      "next_state": "TECHNICIAN_REVIEW_REQUIRED",
+      "tool": "record_verification",
+      "inputs": {
+        "candidate_id": "C02",
+        "decision": "confirm",
+        "note": "Fibre across adjacent leads; remove and check continuity."
+      },
+      "observations": {},
+      "trigger": {
+        "rule": "R-H1",
+        "text": "Technician decision recorded."
+      },
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": null
+    },
+    {
+      "seq": 24,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.313+00:00",
+      "kind": "decision",
+      "actor": "agent",
+      "title": "Review complete - verification pending",
+      "state": "TECHNICIAN_REVIEW_REQUIRED",
+      "next_state": "VERIFICATION_PENDING",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "confirmed": [
+          "C02"
+        ],
+        "electrical_checks": {
+          "C02": "Continuity / resistance check between the adjacent pins with a multimeter (power off); inspect under a second lighting angle."
+        }
+      },
+      "trigger": null,
+      "next_action": "After-repair capture or close",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": "OBS-001"
+    },
+    {
+      "seq": 25,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.327+00:00",
+      "kind": "human",
+      "actor": "technician",
+      "title": "Inspection closed by technician",
+      "state": "VERIFICATION_PENDING",
+      "next_state": "VERIFICATION_PENDING",
+      "tool": null,
+      "inputs": {
+        "note": "Visual inspection closed; electrical check scheduled."
+      },
+      "observations": {},
+      "trigger": null,
+      "next_action": null,
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": null
+    },
+    {
+      "seq": 26,
+      "inspection_id": "BG-20261026-4D2ECF",
+      "timestamp": "2026-10-26T17:38:09.327+00:00",
+      "kind": "system",
+      "actor": "agent",
+      "title": "Inspection completed",
+      "state": "VERIFICATION_PENDING",
+      "next_state": "COMPLETED",
+      "tool": null,
+      "inputs": {},
+      "observations": {
+        "summary": "1 finding(s) confirmed visually by technician; 1 dismissed; electrical verification pending."
+      },
+      "trigger": null,
+      "next_action": "Export report",
+      "status": "ok",
+      "duration_ms": null,
+      "obs_id": null
+    }
+  ],
+  "limitations": [
+    "BoardGuard is a visual inspection aid. It does not measure electrical continuity, resistance or function; a photograph cannot prove or exclude a short or open circuit.",
+    "Candidates are suspected visual anomalies localised by classical OpenCV image analysis with documented, hand-calibrated thresholds. Evidence scores are heuristic and are not calibrated probabilities.",
+    "Thresholds were calibrated on a small set of public PCB photographs and controlled degradations of them, not on a validated corpus of repair cases.",
+    "Software zoom is not optical magnification; lighting guidance must be carried out physically by the technician.",
+    "A visible change between before and after captures documents a visual difference only. It does not establish that a repair succeeded."
+  ]
+}
