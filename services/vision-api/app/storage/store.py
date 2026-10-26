@@ -1,4 +1,4 @@
-﻿"""Object storage for captures, derived artifacts and session state.
+"""Object storage for captures, derived artifacts and session state.
 
 LocalStorage writes under services/vision-api/var/ and serves files through
 the API. S3Storage writes to a private bucket and hands out short-lived

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
@@ -218,7 +218,7 @@ export default function ImageCanvas({
                 <g transform={`translate(${(ax + bx) / 2 + 8}, ${(ay + by) / 2 - 8})`}>
                   <rect x={-4} y={-13} width={172} height={18} rx={2} fill="#111719" stroke="#3a4648" />
                   <text x={2} y={0} fill="#F0F0EB" fontSize={11} className="mono">
-                    {rulerLen.toFixed(1)} px Â· {(rulerLen * pxToOriginal).toFixed(0)} px orig.
+                    {rulerLen.toFixed(1)} px · {(rulerLen * pxToOriginal).toFixed(0)} px orig.
                   </text>
                 </g>
               </g>
@@ -234,16 +234,16 @@ export default function ImageCanvas({
           </span>
           {cursor && cursor[0] >= 0 && cursor[1] >= 0 && cursor[0] <= width && cursor[1] <= height && (
             <span className="rounded-[3px] border border-line bg-bg/80 px-1.5 py-0.5">
-              x {cursor[0].toFixed(0).padStart(4, " ")} Â· y {cursor[1].toFixed(0).padStart(4, " ")}
+              x {cursor[0].toFixed(0).padStart(4, " ")} · y {cursor[1].toFixed(0).padStart(4, " ")}
             </span>
           )}
-          {measure && <span className="rounded-[3px] border border-line bg-bg/80 px-1.5 py-0.5">Drag to measure Â· pixels, no physical calibration</span>}
+          {measure && <span className="rounded-[3px] border border-line bg-bg/80 px-1.5 py-0.5">Drag to measure · pixels, no physical calibration</span>}
         </div>
       )}
       {hud && view && (
         <div className="absolute bottom-2 right-3 flex items-center gap-1">
           {[
-            ["âˆ’", () => zoomAt(0.8), "Zoom out"],
+            ["−", () => zoomAt(0.8), "Zoom out"],
             ["+", () => zoomAt(1.25), "Zoom in"],
             ["Fit", () => setView(fitView(size.w, size.h, width, height)), "Fit image"],
             ["1:1", () => setView({ s: 1, tx: size.w / 2 - width / 2, ty: size.h / 2 - height / 2 }), "Actual pixels"],

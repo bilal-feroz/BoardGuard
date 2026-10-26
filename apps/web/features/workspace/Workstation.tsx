@@ -44,9 +44,9 @@ export default function Workstation() {
   }, []);
 
   return (
-    <div className="grid h-dvh min-h-[560px] grid-rows-[44px_minmax(0,1fr)] bg-bg">
+    <div className="grid h-dvh min-h-[560px] w-full grid-cols-[minmax(0,1fr)] grid-rows-[44px_minmax(0,1fr)] overflow-hidden bg-bg">
       <TopBar />
-      <main className="min-h-0">
+      <main className="min-h-0 min-w-0 overflow-hidden">
         {workspace === "inspect" && (
           <div className="flex h-full min-h-0">
             <ToolRail />
@@ -57,7 +57,7 @@ export default function Workstation() {
                   <Inspector />
                 </aside>
               </div>
-              <div className="h-[108px] shrink-0 border-t border-line bg-surface">
+              <div className="h-[108px] min-w-0 shrink-0 overflow-hidden border-t border-line bg-surface">
                 <Timeline />
               </div>
             </div>

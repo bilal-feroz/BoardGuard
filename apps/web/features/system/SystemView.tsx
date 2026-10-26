@@ -129,7 +129,7 @@ export default function SystemView() {
                     <p className="mt-1 text-[11.5px] leading-snug text-muted">{s.method}</p>
                     <p className="mono mt-1 text-[10.5px] text-faint">{s.data}</p>
                     <div className="mt-2 grid grid-cols-2 gap-x-6">
-                      {s.metrics.map((m) => <KV key={m.name} k={m.name} v={`${typeof m.value === "number" ? (Number.isInteger(m.value) ? m.value : m.value.toFixed(3)) : m.value}${m.unit ? ` ${m.unit}` : ""}`} title={m.note} />)}
+                      {s.metrics.map((m) => <KV key={m.name} k={m.name} v={`${typeof m.value === "number" ? +m.value.toFixed(3) : m.value}${m.unit ? (m.unit === "%" ? "%" : ` ${m.unit}`) : ""}`} title={m.note} />)}
                     </div>
                     {s.table && (
                       <div className="mt-2 max-h-56 overflow-auto">

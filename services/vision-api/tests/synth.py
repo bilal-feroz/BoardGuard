@@ -1,4 +1,4 @@
-﻿"""Deterministic synthetic PCB renderings with exact ground truth.
+"""Deterministic synthetic PCB renderings with exact ground truth.
 
 Used ONLY for unit tests and the synthetic part of the evaluation suite. Every
 image produced here is labelled synthetic wherever it is used.

@@ -26,13 +26,17 @@ function EvidenceChain({ session }: { session: Session }) {
         return (
           <div key={e.seq} className="flex items-center">
             <button type="button" onClick={() => selectEvent(e.seq)}
-              className={`flex h-[74px] w-[150px] shrink-0 flex-col rounded-[4px] border p-2 text-left hover:border-line-strong ${isObs ? "border-line-strong bg-panel-2" : "border-line bg-panel"}`}>
+              className={`flex h-[82px] w-[158px] shrink-0 flex-col rounded-[4px] border p-2 text-left hover:border-line-strong ${isObs ? "border-line-strong bg-panel-2" : "border-line bg-panel"}`}>
               <span className="mono text-[9.5px] uppercase tracking-[0.06em] text-muted">
                 {isObs ? "visual evidence" : e.kind === "decision" ? "decision" : e.kind === "human" ? "technician" : "action"}
                 {e.trigger ? ` · ${e.trigger.rule}` : ""}
               </span>
-              <span className="mt-1 line-clamp-2 text-[11.5px] leading-tight text-ink">{e.title}</span>
-              {obs?.quality && <span className="mono mt-auto text-[10px] text-ink-2">quality {obs.quality.verdict} · blur {obs.quality.metrics.blur_metric.toFixed(2)} · glare {(obs.quality.metrics.glare_fraction * 100).toFixed(1)}%</span>}
+              <span className={`mt-1 text-[11.5px] leading-tight text-ink ${obs ? "line-clamp-1" : "line-clamp-2"}`}>{e.title}</span>
+              {obs?.quality && (
+                <span className="mono mt-auto text-[10px] leading-tight text-ink-2">
+                  {obs.quality.verdict} · blur {obs.quality.metrics.blur_metric.toFixed(2)}<br />glare {(obs.quality.metrics.glare_fraction * 100).toFixed(1)}% · {obs.candidates.length} cand.
+                </span>
+              )}
             </button>
             {i < steps.length - 1 && <Icon.ChevronRight size={12} className="mx-1 shrink-0 text-faint" />}
           </div>

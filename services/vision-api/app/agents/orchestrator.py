@@ -1,4 +1,4 @@
-﻿"""Inspection agent: a transparent state machine over real vision tool calls.
+"""Inspection agent: a transparent state machine over real vision tool calls.
 
 The loop is perception -> decision -> action:
   * perception: OpenCV tools (quality, candidates, registration, change maps)

@@ -1,4 +1,4 @@
-﻿"""Pipeline D - change detection between registered observations.
+"""Pipeline D - change detection between registered observations.
 
 Given a reference image and a moving image already warped into the reference
 frame, compute a change map that is robust to residual misalignment and

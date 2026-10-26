@@ -1,4 +1,4 @@
-﻿// Inspection regions on the representational 3D logic board.
+// Inspection regions on the representational 3D logic board.
 //
 // The 3D board is a generic, procedurally modelled assembly. It is NOT a scan
 // of the boards in the demo images; regions are grounded data objects that

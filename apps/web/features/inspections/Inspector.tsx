@@ -353,7 +353,7 @@ function Findings({ session }: { session: Session }) {
                 <span className="flex-1 truncate text-[12px] text-ink-2">{TYPE_LABEL[f.type]}</span>
                 {f.priority === "HIGH" && <span className="mono text-[10px] text-coral">HIGH</span>}
                 {f.priority === "LOW" && <span className="mono text-[10px] text-muted">LOW</span>}
-                <Badge tone={meta.tone} className="!text-[9.5px]">{meta.label.split(" ")[0]}</Badge>
+                <Badge tone={meta.tone} className="!text-[9.5px]">{meta.short}</Badge>
               </button>
             </li>
           );
@@ -374,17 +374,20 @@ function DecisionRecord({ session }: { session: Session }) {
         Agent decisions
       </SectionTitle>
       <ol className="space-y-2.5">
-        {decisions.map((e) => (
-          <li key={e.seq}>
-            <button type="button" className="w-full text-left" onClick={() => { selectEvent(e.seq); setWorkspace("evidence"); }}>
-              <div className="flex items-baseline gap-2">
-                {e.trigger && <span className="mono text-[10.5px] text-amber">{e.trigger.rule}</span>}
-                <span className="text-[12px] text-ink">{e.title}</span>
-              </div>
-              {e.trigger && <p className="mt-0.5 text-[11.5px] leading-snug text-muted">{e.trigger.text}</p>}
-            </button>
-          </li>
-        ))}
+        {decisions.map((e, i) => {
+          const repeat = i > 0 && decisions[i - 1].trigger?.rule === e.trigger?.rule;
+          return (
+            <li key={e.seq}>
+              <button type="button" className="w-full text-left" onClick={() => { selectEvent(e.seq); setWorkspace("evidence"); }}>
+                <div className="flex items-baseline gap-2">
+                  {e.trigger && <span className="mono text-[10.5px] text-amber">{e.trigger.rule}</span>}
+                  <span className="text-[12px] text-ink">{e.title}</span>
+                </div>
+                {e.trigger && !repeat && <p className="mt-0.5 text-[11.5px] leading-snug text-muted">{e.trigger.text}</p>}
+              </button>
+            </li>
+          );
+        })}
       </ol>
     </Panel>
   );

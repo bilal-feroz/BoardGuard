@@ -1,4 +1,4 @@
-﻿"""Callable vision tools used by the inspection agent.
+"""Callable vision tools used by the inspection agent.
 
 Each tool has an explicit contract (TOOL_CONTRACTS, served at
 GET /api/agent/tools). Implementations take a ToolContext that resolves

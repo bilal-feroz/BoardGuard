@@ -1,4 +1,4 @@
-﻿"""Pipeline B - suspicious visual candidate localisation.
+"""Pipeline B - suspicious visual candidate localisation.
 
 Two candidate classes are localised. Both are *suspected visual anomalies*;
 neither proves a fault.

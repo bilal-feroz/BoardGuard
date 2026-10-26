@@ -32,6 +32,7 @@ THRESHOLDS = {
     "clipped_bright_marginal": 0.07,
     "glare_marginal": 0.035,  # fraction of frame that is specular highlight
     "glare_reject": 0.12,
+    "glare_hotspot_marginal": 0.010,  # largest connected highlight (ring-light hotspot)
     "rms_contrast_marginal": 0.07,
     "tile_px": 128,
     "tile_flat_std": 7.0,  # tiles flatter than this are not judged for focus
@@ -87,7 +88,15 @@ def _measure(bgr: np.ndarray) -> dict:
     total = float(hist.sum())
     cdf = np.cumsum(hist) / total
     glare = specular_mask(bgr)
+    n, _, stats, cents = cv2.connectedComponentsWithStats(glare, connectivity=8)
+    if n > 1:
+        k = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+        largest, centre = float(stats[k, cv2.CC_STAT_AREA]) / glare.size, (float(cents[k][0]), float(cents[k][1]))
+    else:
+        largest, centre = 0.0, None
     return {
+        "largest_glare_blob_fraction": largest,
+        "_glare_centre": centre,
         "gray": gray,
         "glare_mask": glare,
         "laplacian_variance": float(lap.var()),
@@ -164,6 +173,9 @@ def assess_image_quality(bgr: np.ndarray, roi: tuple[int, int, int, int] | None 
         add("GLARE", "reject", f"Specular glare covers {m['glare_fraction']:.1%} of the frame.")
     elif m["glare_fraction"] > th["glare_marginal"]:
         add("GLARE", "marginal", f"Specular glare covers {m['glare_fraction']:.1%} of the frame.")
+    elif m["largest_glare_blob_fraction"] > th["glare_hotspot_marginal"]:
+        cx, cy = m["_glare_centre"]
+        add("GLARE", "marginal", f"Localised specular hotspot ({m['largest_glare_blob_fraction']:.1%} of frame) near x={cx:.0f}, y={cy:.0f}.")
     if m["rms_contrast"] < th["rms_contrast_marginal"]:
         add("LOW_CONTRAST", "marginal", f"RMS contrast {m['rms_contrast']:.3f} < {th['rms_contrast_marginal']}.")
 

@@ -231,9 +231,13 @@ def eval_registration(real: list[dict]) -> dict:
     # Negative pairs: different photographs must not register.
     neg = 0
     neg_ok = 0
+    def scene(it):  # photographs known to show the same physical scene
+        f = it["file"]
+        return "psu" if f.startswith("pairs/") else "lqfp48" if "lqfp48-realtek" in f else f
+
     for i in range(len(real)):
         j = (i + 1) % len(real)
-        if i == j:
+        if i == j or scene(real[i]) == scene(real[j]):
             continue
         neg += 1
         r = registration.register_image_pair(real[i]["img"], real[j]["img"])

@@ -1,4 +1,4 @@
-﻿"""BoardGuard vision API (FastAPI + OpenCV 5)."""
+"""BoardGuard vision API (FastAPI + OpenCV 5)."""
 
 from __future__ import annotations
 

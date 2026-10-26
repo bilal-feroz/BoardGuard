@@ -1,4 +1,4 @@
-﻿"""Decision policies for the inspection agent.
+"""Decision policies for the inspection agent.
 
 Pure functions: they take measured vision outputs and return a decision with
 the rule that fired. Keeping them free of I/O makes every transition unit

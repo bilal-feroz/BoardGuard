@@ -17,14 +17,14 @@ export const STATE_META: Record<string, { label: string; tone: Tone }> = {
   FAILED_SAFELY: { label: "Stopped safely", tone: "amber" },
 };
 
-export const FINDING_META: Record<FindingStatus, { label: string; tone: Tone }> = {
-  DETECTED: { label: "Detected", tone: "amber" },
-  EVIDENCE_INSUFFICIENT: { label: "Evidence insufficient", tone: "amber" },
-  REVIEW_REQUIRED: { label: "Review required", tone: "coral" },
-  NOT_REPRODUCED: { label: "Not reproduced", tone: "muted" },
-  UNRESOLVED: { label: "Unresolved", tone: "amber" },
-  TECHNICIAN_CONFIRMED: { label: "Confirmed by technician", tone: "coral" },
-  TECHNICIAN_DISMISSED: { label: "Dismissed by technician", tone: "teal" },
+export const FINDING_META: Record<FindingStatus, { label: string; short: string; tone: Tone }> = {
+  DETECTED: { label: "Detected", short: "detected", tone: "amber" },
+  EVIDENCE_INSUFFICIENT: { label: "Evidence insufficient", short: "evidence", tone: "amber" },
+  REVIEW_REQUIRED: { label: "Review required", short: "review", tone: "coral" },
+  NOT_REPRODUCED: { label: "Not reproduced", short: "not repr.", tone: "muted" },
+  UNRESOLVED: { label: "Unresolved", short: "unresolved", tone: "amber" },
+  TECHNICIAN_CONFIRMED: { label: "Confirmed by technician", short: "confirmed", tone: "coral" },
+  TECHNICIAN_DISMISSED: { label: "Dismissed by technician", short: "dismissed", tone: "teal" },
 };
 
 export const TYPE_LABEL: Record<CandidateType, string> = {

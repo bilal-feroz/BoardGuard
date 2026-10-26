@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useRef, useState } from "react";
 import { Icon } from "@/components/icons";
@@ -100,8 +100,8 @@ function SplitView({ before, after, alignedUrl }: { before: Observation; after: 
           <svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M5 1L1 5l4 4M9 1l4 4-4 4" stroke="currentColor" fill="none" strokeWidth="1.4" /></svg>
         </button>
       </div>
-      <span className="mono pointer-events-none absolute left-3 top-3 rounded-[3px] border border-line bg-bg/85 px-2 py-0.5 text-[11px]">BEFORE Â· {before.obs_id}</span>
-      <span className="mono pointer-events-none absolute right-3 top-3 rounded-[3px] border border-line bg-bg/85 px-2 py-0.5 text-[11px]">AFTER (registered) Â· {after.obs_id}</span>
+      <span className="mono pointer-events-none absolute left-3 top-3 rounded-[3px] border border-line bg-bg/85 px-2 py-0.5 text-[11px]">BEFORE · {before.obs_id}</span>
+      <span className="mono pointer-events-none absolute right-3 top-3 rounded-[3px] border border-line bg-bg/85 px-2 py-0.5 text-[11px]">AFTER (registered) · {after.obs_id}</span>
     </div>
   );
 }
@@ -112,7 +112,7 @@ function SideBySide({ before, after, alignedUrl }: { before: Observation; after:
     <div className="grid h-full grid-cols-2 gap-px bg-line">
       <div className="relative">
         <ImageCanvas src={apiUrl(before.capture_url)!} width={before.width} height={before.height} view={view} onViewChange={setView} fitKey={`sbs-${before.obs_id}`} ariaLabel="Before image" hud={false} />
-        <span className="mono pointer-events-none absolute left-3 top-3 rounded-[3px] border border-line bg-bg/85 px-2 py-0.5 text-[11px]">BEFORE Â· {before.obs_id}</span>
+        <span className="mono pointer-events-none absolute left-3 top-3 rounded-[3px] border border-line bg-bg/85 px-2 py-0.5 text-[11px]">BEFORE · {before.obs_id}</span>
       </div>
       <div className="relative">
         {alignedUrl ? (
@@ -121,7 +121,7 @@ function SideBySide({ before, after, alignedUrl }: { before: Observation; after:
           <ImageCanvas src={apiUrl(after.capture_url)!} width={after.width} height={after.height} fitKey={`raw-${after.obs_id}`} ariaLabel="After image, unregistered" />
         )}
         <span className="mono pointer-events-none absolute left-3 top-3 rounded-[3px] border border-line bg-bg/85 px-2 py-0.5 text-[11px]">
-          AFTER Â· {after.obs_id} {alignedUrl ? "Â· registered, zoom synchronised" : "Â· UNREGISTERED"}
+          AFTER · {after.obs_id} {alignedUrl ? "· registered, zoom synchronised" : "· UNREGISTERED"}
         </span>
       </div>
     </div>
@@ -161,13 +161,13 @@ function DiffView({ before, v }: { before: Observation; v: Verification }) {
             })}
             {ch.candidate_links.map((c) => {
               const [x, y] = toScreen(c.bbox[0], c.bbox[1] + c.bbox[3]);
-              return <span key={c.candidate_id} className="mono absolute rounded-[2px] bg-bg/85 px-1 text-[10px] text-ink" style={{ left: x, top: y + 3 }}>{c.candidate_id} Â· finding</span>;
+              return <span key={c.candidate_id} className="mono absolute rounded-[2px] bg-bg/85 px-1 text-[10px] text-ink" style={{ left: x, top: y + 3 }}>{c.candidate_id} · finding</span>;
             })}
           </>
         )}
       />
       <div className="absolute left-3 top-3 flex items-center gap-2">
-        <span className="mono rounded-[3px] border border-line bg-bg/85 px-2 py-0.5 text-[11px]">CHANGE MAP Â· over {before.obs_id}</span>
+        <span className="mono rounded-[3px] border border-line bg-bg/85 px-2 py-0.5 text-[11px]">CHANGE MAP · over {before.obs_id}</span>
         <div className="flex overflow-hidden rounded-[3px] border border-line bg-bg/85">
           {(["heat", "mask"] as const).map((l) => (
             <button key={l} type="button" onClick={() => setLayer(l)} className={`mono px-2 py-0.5 text-[10.5px] ${layer === l ? "bg-raised text-ink" : "text-muted hover:text-ink"}`}>
@@ -176,7 +176,7 @@ function DiffView({ before, v }: { before: Observation; v: Verification }) {
           ))}
         </div>
       </div>
-      <div className="pointer-events-none absolute bottom-10 left-3 flex flex-col gap-1 rounded-[3px] border border-line bg-bg/85 px-2.5 py-2 text-[10.5px]">
+      <div className="pointer-events-none absolute bottom-10 right-3 flex flex-col gap-1 rounded-[3px] border border-line bg-bg/85 px-2.5 py-2 text-[10.5px]">
         <span className="mono flex items-center gap-2 text-ink-2"><span className="inline-block h-2 w-5 bg-gradient-to-r from-transparent to-[#D8AA68]" /> visual change magnitude</span>
         <span className="mono flex items-center gap-2 text-ink-2"><span className="inline-block h-2.5 w-5 border border-amber" /> change region (D##)</span>
         <span className="mono flex items-center gap-2 text-ink-2"><span className="inline-block h-2.5 w-5 border border-dashed border-ink" /> prior finding (C##)</span>
@@ -209,7 +209,7 @@ function VerificationWorkspace({ session, v, before, after }: { session: Session
               </button>
             ))}
           </div>
-          <span className="mono text-[11px] text-muted">{before.obs_id} â†’ {after.obs_id} Â· {reg.method ?? "â€”"} + MAGSAC homography</span>
+          <span className="mono text-[11px] text-muted">{before.obs_id} → {after.obs_id} · {reg.method ?? "—"} + MAGSAC homography</span>
         </div>
         <div className="relative min-h-0 flex-1">
           {failed ? <SideBySide before={before} after={after} alignedUrl={null} />
@@ -218,7 +218,7 @@ function VerificationWorkspace({ session, v, before, after }: { session: Session
                 : <DiffView before={before} v={v} />}
           {failed && (
             <div className="absolute inset-x-0 bottom-0 border-t border-coral/40 bg-panel/95 px-4 py-3">
-              <div className="flex items-center gap-2 text-[13px] text-coral"><Icon.Alert size={14} /> Registration failed â€” aligned overlay and change map withheld</div>
+              <div className="flex items-center gap-2 text-[13px] text-coral"><Icon.Alert size={14} /> Registration failed — aligned overlay and change map withheld</div>
               <ul className="mt-1 space-y-0.5">{reg.reasons.map((r, i) => <li key={i} className="mono text-[11px] text-ink-2">{r}</li>)}</ul>
             </div>
           )}
@@ -229,13 +229,13 @@ function VerificationWorkspace({ session, v, before, after }: { session: Session
       <aside className="w-[340px] shrink-0 overflow-y-auto border-l border-line bg-panel">
         <Panel>
           <SectionTitle right={<Badge tone={REG_TONE[reg.status]}>{reg.status}</Badge>}>Registration</SectionTitle>
-          <KV k="Method" v={reg.method ?? "â€”"} />
-          <KV k="Ratio-test matches" v={reg.ratio_matches ?? "â€”"} />
-          <KV k="Inliers (MAGSAC)" v={reg.inliers ?? "â€”"} />
-          <KV k="Inlier ratio" v={reg.inlier_ratio != null ? fmtPct(reg.inlier_ratio) : "â€”"} />
-          <KV k="RMS reprojection" v={reg.rms_reprojection_px != null ? `${reg.rms_reprojection_px.toFixed(2)} px` : "â€”"} />
-          <KV k="Inlier coverage" v={reg.inlier_coverage != null ? fmtPct(reg.inlier_coverage) : "â€”"} />
-          <KV k="Keypoints (ref / mov)" v={reg.attempts?.[0] ? `${reg.attempts[0].keypoints_ref} / ${reg.attempts[0].keypoints_mov}` : "â€”"} />
+          <KV k="Method" v={reg.method ?? "—"} />
+          <KV k="Ratio-test matches" v={reg.ratio_matches ?? "—"} />
+          <KV k="Inliers (MAGSAC)" v={reg.inliers ?? "—"} />
+          <KV k="Inlier ratio" v={reg.inlier_ratio != null ? fmtPct(reg.inlier_ratio) : "—"} />
+          <KV k="RMS reprojection" v={reg.rms_reprojection_px != null ? `${reg.rms_reprojection_px.toFixed(2)} px` : "—"} />
+          <KV k="Inlier coverage" v={reg.inlier_coverage != null ? fmtPct(reg.inlier_coverage) : "—"} />
+          <KV k="Keypoints (ref / mov)" v={reg.attempts?.[0] ? `${reg.attempts[0].keypoints_ref} / ${reg.attempts[0].keypoints_mov}` : "—"} />
           <KV k="Time" v={fmtMs(reg.duration_ms)} />
           {reg.status !== "FAILED" && reg.reasons.length > 0 && <p className="mt-1.5 text-[11.5px] text-amber">{reg.reasons.join(" ")}</p>}
         </Panel>
@@ -253,7 +253,7 @@ function VerificationWorkspace({ session, v, before, after }: { session: Session
                 {ch.candidate_links.map((l) => (
                   <tr key={l.candidate_id} className="border-t border-line">
                     <td className="mono py-1.5 text-ink">{l.candidate_id} <span className="text-muted">{TYPE_SHORT[l.type]}</span></td>
-                    <td className={`mono ${l.visible_change ? "text-teal" : "text-amber"}`}>{l.visible_change ? `yes Â· ${fmtPct(l.changed_fraction_in_bbox, 0)}` : "no"}</td>
+                    <td className={`mono ${l.visible_change ? "text-teal" : "text-amber"}`}>{l.visible_change ? `yes · ${fmtPct(l.changed_fraction_in_bbox, 0)}` : "no"}</td>
                     <td className={`mono ${l.redetected_after ? "text-coral" : "text-ink-2"}`}>{l.redetected_after ? "yes" : "no"}</td>
                   </tr>
                 ))}
@@ -261,7 +261,7 @@ function VerificationWorkspace({ session, v, before, after }: { session: Session
               </tbody>
             </table>
             {ch.regions.some((r) => !ch.candidate_links.some((l) => overlaps(l.bbox, r.bbox))) && (
-              <p className="mt-2 text-[11.5px] text-amber">Some visible change lies outside prior findings â€” review for collateral rework or residue.</p>
+              <p className="mt-2 text-[11.5px] text-amber">Some visible change lies outside prior findings — review for collateral rework or residue.</p>
             )}
           </Panel>
         )}
