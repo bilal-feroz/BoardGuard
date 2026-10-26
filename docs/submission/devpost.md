@@ -4,6 +4,8 @@
 
 **Elevator pitch (≤200 chars):** An OpenCV 5 inspection agent for repair technicians: it measures every microscope capture, asks for a better look when glare or blur hides the truth, and verifies before/after repairs.
 
+**Try it:** https://boardguard-three.vercel.app (five built-in scenarios; every analysis runs live with OpenCV 5)
+
 ## Inspiration
 
 Repair technicians spend hours under digital microscopes hunting for corrosion and solder bridges on
@@ -27,6 +29,9 @@ wanted software that behaves the same way.
   visible change onto findings, and withholds overlays when alignment is unreliable.
 * Records a full evidence trace and produces a printable report.
 * Lets you navigate a detailed 3D logic board and fly into a region to open its microscope view.
+* Gives the technician their own tools: drag any area to check its evidence quality (glare, focus,
+  exposure, lead resolution), measure in millimetres after calibrating from a known IC lead pitch, and undo
+  a confirm/dismiss while the review is still open. Every step lands in the trace.
 
 ## How we built it
 
@@ -41,6 +46,8 @@ wanted software that behaves the same way.
 * **Agent:** a policy-driven state machine in Python. Its tools have explicit contracts and its
   rule-cited decisions are unit-tested.
 * **FastAPI** service; **Next.js 16 + React Three Fiber** workstation UI.
+* **Live demo on Vercel:** the static UI on the CDN and the FastAPI/OpenCV 5 service as one Python
+  Function; inspections are shared between function instances through Vercel's Runtime Cache.
 * **AWS:** one container on **Lambda** (Lambda Web Adapter) behind a Function URL, a private **S3**
   evidence store with 7-day expiry, **CloudWatch** logs, **ECR**, all in one CloudFormation template.
 * 27 licence-checked Wikimedia Commons photographs plus a reproducible evaluation script.
@@ -75,12 +82,13 @@ classes.
 
 * Collect a consented, annotated corpus of real repair imagery with partner shops and train a small
   learned detector behind the same agent.
-* Stage-micrometer calibration for physical measurements.
+* Stage-micrometer calibration and perspective correction (today the scale comes from a known lead pitch
+  or a ruler over a known distance).
 * Local (non-planar) registration refinement.
 * Integration with USB microscope controls (focus, illumination) so the agent's requests can be carried
   out by the instrument.
 
 ## Built with
 
-opencv, python, fastapi, numpy, aws-lambda, amazon-s3, amazon-cloudwatch, amazon-ecr, aws-cloudformation,
+opencv, python, fastapi, numpy, vercel, aws-lambda, amazon-s3, amazon-cloudwatch, amazon-ecr, aws-cloudformation,
 docker, next.js, react, typescript, three.js, react-three-fiber, tailwindcss, playwright

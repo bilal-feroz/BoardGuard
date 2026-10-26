@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-10-26 17:28 UTC",
+ "generated_at": "2026-10-26 19:57 UTC",
  "opencv_version": "5.0.0",
- "environment": "local \u00b7 Windows 10 \u00b7 Python 3.11.9",
+ "environment": "local \u00b7 Windows 10 \u00b7 Python 3.11.16",
  "command": "services/vision-api/.venv/Scripts/python scripts/evaluate.py",
- "duration_s": 229.3,
+ "duration_s": 274.9,
  "sections": [
   {
    "id": "quality",
@@ -252,7 +252,7 @@
     },
     {
      "name": "median detection time",
-     "value": 395.6,
+     "value": 223.2,
      "unit": "ms"
     },
     {
@@ -516,7 +516,7 @@
     },
     {
      "name": "median registration time",
-     "value": 403.8,
+     "value": 682.2,
      "unit": "ms"
     }
    ],
@@ -535,28 +535,28 @@
       "corrosion/corrosion_01_nicd-leak-korg-poly61.jpg",
       0,
       "REGISTERED",
-      2533,
-      0.977,
-      0.44,
-      0.15
+      2529,
+      0.978,
+      0.45,
+      0.13
      ],
      [
       "corrosion/corrosion_01_nicd-leak-korg-poly61.jpg",
       1,
       "REGISTERED",
-      2599,
-      0.983,
+      2597,
+      0.982,
       0.41,
-      0.14
+      0.2
      ],
      [
       "corrosion/corrosion_01_nicd-leak-korg-poly61.jpg",
       2,
       "REGISTERED",
-      2611,
-      0.987,
+      2612,
+      0.986,
       0.45,
-      0.13
+      0.11
      ],
      [
       "corrosion/corrosion_02_nicd-leak-ic-socket-pins.jpg",
@@ -1066,10 +1066,10 @@
       "clean/clean_05_mlcc-led-macro-1mm-scalebar.jpg",
       2,
       "REGISTERED",
-      2008,
-      0.961,
-      0.52,
-      0.06
+      2005,
+      0.965,
+      0.53,
+      0.07
      ],
      [
       "clean/clean_06_soic8-opamps-black-pcb.jpg",
@@ -1201,7 +1201,7 @@
       "pairs/pairs_02_sharp-psu-after-closeup.jpg",
       2,
       "REGISTERED",
-      2066,
+      2064,
       0.961,
       0.41,
       0.05
@@ -1285,7 +1285,7 @@
     },
     {
      "name": "median change-map time",
-     "value": 813.2,
+     "value": 424.5,
      "unit": "ms"
     }
    ],
@@ -1378,31 +1378,31 @@
    "id": "performance",
    "title": "Local processing latency",
    "method": "Wall-clock time of each pipeline on the working-resolution images (longest side <= 1600 px), single process.",
-   "data": "27 images; host: AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD / 16 logical CPUs; OpenCV threads 16.",
+   "data": "27 images; host: Intel64 Family 6 Model 140 Stepping 1, GenuineIntel / 8 logical CPUs; OpenCV threads 8.",
    "metrics": [
     {
      "name": "quality median",
-     "value": 180.3,
+     "value": 215.3,
      "unit": "ms"
     },
     {
      "name": "quality p95",
-     "value": 265.8,
+     "value": 306.7,
      "unit": "ms"
     },
     {
      "name": "candidates median",
-     "value": 623.1,
+     "value": 465.2,
      "unit": "ms"
     },
     {
      "name": "candidates p95",
-     "value": 1280.7,
+     "value": 864.7,
      "unit": "ms"
     },
     {
      "name": "typical working size",
-     "value": "1600x1067"
+     "value": "1600x1200"
     }
    ]
   }

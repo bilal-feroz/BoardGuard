@@ -15,6 +15,9 @@ with them.
 
 Built for the [OpenCV AI Competition 2026](https://opencv26.devpost.com/) (Grand Prize, Agentic Vision).
 
+**Live demo: [boardguard-three.vercel.app](https://boardguard-three.vercel.app)**: the full workstation, with every
+analysis computed live by OpenCV 5 in a Vercel Function (open **System** to see the runtime).
+
 ![Workstation](docs/submission/screenshots/workstation.png)
 
 ## What is real
@@ -26,6 +29,7 @@ Built for the [OpenCV AI Competition 2026](https://opencv26.devpost.com/) (Grand
 | Agent | Policy-driven state machine; vision outputs select the next tool call / recapture request / technician review; every step traced with rule ids and timings |
 | Images | 27 licensed Wikimedia Commons photographs (CC0 / PD / CC BY-SA) + clearly labelled synthetic fixtures; see [datasets/README.md](datasets/README.md) |
 | 3D board | Representative procedural model for navigation; **not** a scan of the imaged boards |
+| Live deployment | [Vercel](https://boardguard-three.vercel.app): static UI on the CDN + the FastAPI/OpenCV 5 service as one Python Function; inspections shared across function instances through Vercel's Runtime Cache ([`infrastructure/vercel`](infrastructure/vercel)) |
 | AWS | Container + CloudFormation for Lambda (Function URL) + private S3 + CloudWatch are in [`infrastructure/aws`](infrastructure/aws). See the deployment status in [docs/submission/STATUS.md](docs/submission/STATUS.md) |
 
 **Demo video (2:26, real application footage):** [`docs/submission/video/boardguard-demo.mp4`](docs/submission/video/boardguard-demo.mp4) ·
@@ -38,11 +42,14 @@ Built for the [OpenCV AI Competition 2026](https://opencv26.devpost.com/) (Grand
 | ![Recapture requested](docs/submission/screenshots/s02-recapture-requested.png) | ![Evidence trace](docs/submission/screenshots/evidence.png) |
 | ![Before/after split](docs/submission/screenshots/verify-split.png) | ![Difference map](docs/submission/screenshots/verify-diff.png) |
 | ![Overlay withheld](docs/submission/screenshots/verify-withheld.png) | ![System](docs/submission/screenshots/system.png) |
+| ![Region evidence check](docs/submission/screenshots/region-check.png) | ![Ruler calibrated from lead pitch](docs/submission/screenshots/calibrated-ruler.png) |
 
 ## Key capabilities
 
-* **Inspection workstation** — 3D board → microscope hand-off, zoom/pan/measure, analysis layers (candidates, glare mask, unusable tiles, corrosion cue mask, metallic mask), original-image toggle, live camera / USB microscope capture, uploads.
+* **Inspection workstation** — 3D board → microscope hand-off, zoom/pan/measure, analysis layers (candidates, glare mask, unusable tiles, corrosion cue mask, metallic mask), original-image toggle, live camera / USB microscope capture, uploads (large photos are downscaled in the browser).
 * **Active visual reinspection** — region-level evidence checks (glare, blur, exposure, lead resolution) trigger targeted recapture instructions; second observations are registered and every earlier finding is classified *persisted*, *not reproduced* or *still inconclusive*.
+* **Technician tools** — *region evidence check* (tool `R`): drag any area to measure glare, focus, exposure and IC lead resolution there, recorded in the trace without changing the agent state; *calibrated measuring* (tool `M`): set the scale from a detected lead row with a known package pitch (e.g. 0.5 mm TQFP) or from a ruler over a known distance, then measure in millimetres; *undo* of a confirm/dismiss while its review is still the current step (rule R-H2, withdrawal kept in the trace).
+* **Resilient client** — offline banner and status with automatic reconnect (exponential backoff + heartbeat), one-click retry of a failed request, request timeouts.
 * **Before/after verification** — split slider, synchronised side-by-side, difference map, registration metrics, findings-vs-change table; overlays are withheld when registration fails.
 * **Evidence & trace** — every tool call, decision and human action with inputs, outputs, trigger rule, duration; downloadable JSON trace; printable HTML report and JSON report.
 * **System screen** — live runtime identity (OpenCV build, environment, AWS details when deployed), live processing probe, tool contracts, decision rules, thresholds, evaluation results, image licences.
@@ -80,6 +87,20 @@ docker build -t boardguard .
 docker run --rm -p 8080:8080 boardguard     # http://localhost:8080
 ```
 
+## Deploy to Vercel (live demo)
+
+```bash
+cd apps/web && npx next build && cd ../..           # static UI export, same-origin API
+python infrastructure/vercel/package_vercel.py      # assembles dist/boardguard
+cd dist/boardguard && vercel deploy --prod          # Vercel CLI, logged in
+```
+
+`dist/boardguard` holds the UI in `public/` (served from the CDN) and the vision API at `app/main.py`, which
+Vercel's zero-config FastAPI support runs as one Python Function (60 s max duration). Captures, overlays
+and sessions are written to the function's `/tmp` and mirrored into Vercel's regional Runtime Cache
+(24 h TTL), so any instance can continue any inspection. Uploads are capped at 4.4 MB (the platform
+limit is 4.5 MB per request); the UI downscales larger photos before sending them.
+
 ## Deploy to AWS
 
 Two equivalent paths, both a single CloudFormation stack:
@@ -107,21 +128,22 @@ bucket (zip path) or an ECR repository with scan-on-push (container path).
 | Variable | Default | Purpose |
 |---|---|---|
 | `BOARDGUARD_S3_BUCKET` / `BOARDGUARD_S3_PREFIX` | unset / `boardguard/` | Use S3 for captures, artifacts and sessions |
-| `BOARDGUARD_DATA_DIR` | `services/vision-api/var/store` | Local storage root |
-| `BOARDGUARD_FIXTURES_DIR` | `datasets/fixtures` | Demo fixtures and scenarios |
+| `BOARDGUARD_DATA_DIR` | `services/vision-api/var/store` (temp dir on Vercel / Lambda) | Local storage root |
+| `BOARDGUARD_FIXTURES_DIR` | `datasets/fixtures` (or `fixtures/` next to `app/` in a deployment bundle) | Demo fixtures and scenarios |
 | `BOARDGUARD_STATIC_DIR` | unset | Serve the exported UI from the API |
 | `BOARDGUARD_CORS_ORIGINS` | `http://localhost:3000` | Allowed browser origins |
-| `BOARDGUARD_MAX_UPLOAD_BYTES` | 8000000 | Upload cap |
+| `BOARDGUARD_MAX_UPLOAD_BYTES` | 8388608 (4400000 on Vercel) | Upload cap |
 | `BOARDGUARD_RATE_PER_MIN` | 90 | Per-IP POST rate limit |
 | `BOARDGUARD_API_KEY` | unset | Require `X-BoardGuard-Key` on POSTs |
 
 ## Tests and evaluation
 
 ```bash
-cd services/vision-api && .venv/Scripts/python -m pytest -q          # 42 unit + API + agent + Lambda-handler tests
+cd services/vision-api && .venv/Scripts/python -m pytest -q          # 46 unit + API + agent + storage + Lambda-handler tests
 .venv/Scripts/python ../../scripts/evaluate.py                       # writes docs/evaluation/results.md
 cd apps/web && npx tsc --noEmit && npm run lint && npx next build
-BASE_URL=http://localhost:3000 npx playwright test                   # 6 browser scenarios (needs API on :8000 + UI)
+BASE_URL=http://localhost:3000 npx playwright test                   # 8 browser scenarios (needs API on :8000 + UI)
+BASE_URL=https://boardguard-three.vercel.app npx playwright test     # same scenarios against the live deployment
 ```
 
 Results: [docs/evaluation/results.md](docs/evaluation/results.md) (also shown on the System screen).
@@ -133,6 +155,7 @@ apps/web/                 Next.js workstation (features/: workspace, board-explo
 services/vision-api/      FastAPI + OpenCV 5 (app/vision, app/agents, app/storage, app/reports, tests)
 datasets/                 raw licensed photos + manifest, demo fixtures + scenarios
 infrastructure/aws/       CloudFormation template, deploy and verify scripts
+infrastructure/vercel/    Vercel bundle script and config (live demo)
 scripts/                  make_fixtures.py, evaluate.py
 docs/                     architecture, evaluation, submission material
 ```
@@ -147,6 +170,8 @@ docs/                     architecture, evaluation, submission material
 * Brown/dark staining and eaten traces are measured but do not raise corrosion candidates (too many false positives on brown boards and copper).
 * Homography registration assumes a mostly planar field of view; tall components and large viewpoint changes cause correct refusals (Scenario 05) or parallax-induced change.
 * Software zoom is not optical magnification; lighting guidance is executed physically by the technician.
+* Millimetre measurements hold in the plane of the calibration reference (lead row or ruler) only; there is no perspective correction, and the calibration is stored in the browser.
+* On the live Vercel demo, inspections are temporary (Runtime Cache, 24 h TTL, may be evicted earlier); the AWS build keeps evidence in S3 for 7 days.
 * The demo has no user authentication; technician actions are attributed to an unauthenticated user.
 
 ## Licences

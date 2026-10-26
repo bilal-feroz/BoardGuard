@@ -1,6 +1,6 @@
 # BoardGuard evaluation results
 
-Generated 2026-10-26 17:28 UTC with OpenCV 5.0.0 (local · Windows 10 · Python 3.11.9) in 229.3 s.
+Generated 2026-10-26 19:57 UTC with OpenCV 5.0.0 (local · Windows 10 · Python 3.11.16) in 274.9 s.
 
 Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 
@@ -70,7 +70,7 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | bridge recall | 1.0 |
 | corrosion precision | 1.0 |
 | corrosion recall | 0.792 |
-| median detection time | 395.6 ms |
+| median detection time | 223.2 ms |
 | real 'clean': images with corrosion cand. | 1/8 |
 | real 'corrosion': images with corrosion cand. | 4/7 |
 | real 'fine_pitch': images with corrosion cand. | 1/8 |
@@ -128,13 +128,13 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | median max-corner error | 0.09 px |
 | worst max-corner error | 0.52 px |
 | unrelated pairs correctly FAILED | 23/23 |
-| median registration time | 403.8 ms |
+| median registration time | 682.2 ms |
 
 | image | warp | status | inliers | inlier ratio | RMS px | corner err px |
 |---|---|---|---|---|---|---|
-| corrosion/corrosion_01_nicd-leak-korg-poly61.jpg | 0 | REGISTERED | 2533 | 0.977 | 0.44 | 0.15 |
-| corrosion/corrosion_01_nicd-leak-korg-poly61.jpg | 1 | REGISTERED | 2599 | 0.983 | 0.41 | 0.14 |
-| corrosion/corrosion_01_nicd-leak-korg-poly61.jpg | 2 | REGISTERED | 2611 | 0.987 | 0.45 | 0.13 |
+| corrosion/corrosion_01_nicd-leak-korg-poly61.jpg | 0 | REGISTERED | 2529 | 0.978 | 0.45 | 0.13 |
+| corrosion/corrosion_01_nicd-leak-korg-poly61.jpg | 1 | REGISTERED | 2597 | 0.982 | 0.41 | 0.2 |
+| corrosion/corrosion_01_nicd-leak-korg-poly61.jpg | 2 | REGISTERED | 2612 | 0.986 | 0.45 | 0.11 |
 | corrosion/corrosion_02_nicd-leak-ic-socket-pins.jpg | 0 | REGISTERED | 2784 | 0.984 | 0.44 | 0.14 |
 | corrosion/corrosion_02_nicd-leak-ic-socket-pins.jpg | 1 | REGISTERED | 2701 | 0.986 | 0.44 | 0.1 |
 | corrosion/corrosion_02_nicd-leak-ic-socket-pins.jpg | 2 | REGISTERED | 2734 | 0.986 | 0.4 | 0.16 |
@@ -191,7 +191,7 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | clean/clean_04_mlcc-capacitors-macro.jpg | 2 | REGISTERED | 2279 | 0.97 | 0.46 | 0.15 |
 | clean/clean_05_mlcc-led-macro-1mm-scalebar.jpg | 0 | REGISTERED | 2095 | 0.968 | 0.53 | 0.04 |
 | clean/clean_05_mlcc-led-macro-1mm-scalebar.jpg | 1 | REGISTERED | 2122 | 0.971 | 0.48 | 0.06 |
-| clean/clean_05_mlcc-led-macro-1mm-scalebar.jpg | 2 | REGISTERED | 2008 | 0.961 | 0.52 | 0.06 |
+| clean/clean_05_mlcc-led-macro-1mm-scalebar.jpg | 2 | REGISTERED | 2005 | 0.965 | 0.53 | 0.07 |
 | clean/clean_06_soic8-opamps-black-pcb.jpg | 0 | REGISTERED | 2690 | 0.957 | 0.36 | 0.08 |
 | clean/clean_06_soic8-opamps-black-pcb.jpg | 1 | REGISTERED | 2728 | 0.958 | 0.35 | 0.1 |
 | clean/clean_06_soic8-opamps-black-pcb.jpg | 2 | REGISTERED | 2697 | 0.956 | 0.34 | 0.1 |
@@ -206,7 +206,7 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | pairs/pairs_01_sharp-psu-before-closeup.jpg | 2 | REGISTERED | 2413 | 0.971 | 0.23 | 0.16 |
 | pairs/pairs_02_sharp-psu-after-closeup.jpg | 0 | REGISTERED | 1949 | 0.957 | 0.49 | 0.11 |
 | pairs/pairs_02_sharp-psu-after-closeup.jpg | 1 | REGISTERED | 2261 | 0.967 | 0.48 | 0.11 |
-| pairs/pairs_02_sharp-psu-after-closeup.jpg | 2 | REGISTERED | 2066 | 0.961 | 0.41 | 0.05 |
+| pairs/pairs_02_sharp-psu-after-closeup.jpg | 2 | REGISTERED | 2064 | 0.961 | 0.41 | 0.05 |
 | pairs/pairs_03_sharp-psu-before-wide.jpg | 0 | REGISTERED | 2579 | 0.981 | 0.45 | 0.15 |
 | pairs/pairs_03_sharp-psu-before-wide.jpg | 1 | REGISTERED | 2456 | 0.985 | 0.41 | 0.07 |
 | pairs/pairs_03_sharp-psu-before-wide.jpg | 2 | REGISTERED | 2776 | 0.987 | 0.4 | 0.13 |
@@ -225,7 +225,7 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 | removed defects marked changed | 22/22 |
 | spurious regions on no-change controls | 0 |
 | mean changed fraction on controls | 0.0 % |
-| median change-map time | 813.2 ms |
+| median change-map time | 424.5 ms |
 
 **Failure cases / limitations**
 
@@ -264,12 +264,12 @@ Reproduce: `services/vision-api/.venv/Scripts/python scripts/evaluate.py`
 
 **Method.** Wall-clock time of each pipeline on the working-resolution images (longest side <= 1600 px), single process.
 
-**Data.** 27 images; host: AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD / 16 logical CPUs; OpenCV threads 16.
+**Data.** 27 images; host: Intel64 Family 6 Model 140 Stepping 1, GenuineIntel / 8 logical CPUs; OpenCV threads 8.
 
 | Metric | Value |
 |---|---|
-| quality median | 180.3 ms |
-| quality p95 | 265.8 ms |
-| candidates median | 623.1 ms |
-| candidates p95 | 1280.7 ms |
-| typical working size | 1600x1067 |
+| quality median | 215.3 ms |
+| quality p95 | 306.7 ms |
+| candidates median | 465.2 ms |
+| candidates p95 | 864.7 ms |
+| typical working size | 1600x1200 |

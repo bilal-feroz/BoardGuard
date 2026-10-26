@@ -83,6 +83,14 @@ Invariants (unit- and evaluation-tested): quality-rejected captures are never an
 finding is cleared without a technician decision; failed registration never yields an overlay; at most
 two agent-initiated recaptures per inspection.
 
+The technician has tools of their own. A *region evidence check* runs the same region-level measurements
+(glare, Crete blur, exposure, lead width in pixels) on any rectangle they draw; it is traced as a
+technician-initiated tool call and never changes the state. A confirm/dismiss can be *withdrawn* while
+its review is still the current step (rule R-H2), with the withdrawal kept in the trace. Measurements can
+be calibrated to millimetres from a detected lead row with a known package pitch: on Scenario 02 a
+0.5 mm TQFP-144 pitch gives 0.0147 mm/px, which puts the 20 mm package body at about 1,360 px, as
+observed.
+
 Example (Scenario 02, real TQFP-144 photo): a ring-light hotspot on the right lead row creates a
 merged-lead suspicion whose local glare is 28 % → rule R-E1 → "Reduce specular glare … switch to diffuse
 or polarised illumination … keep the same field of view". The diffuse recapture registers with ~3.9k MAGSAC
@@ -98,6 +106,12 @@ presigned URLs for the browser) so any Lambda instance can continue any inspecti
 receives per-request processing logs; **ECR** stores images (scan on push). IAM is least-privilege
 (S3 Get/Put on one prefix, log writes). The whole stack is one CloudFormation template plus a deploy and a
 verification script (`infrastructure/aws`). Deployment status: see `docs/submission/STATUS.md`.
+
+**Live demo (Vercel).** The same API code runs at https://boardguard-three.vercel.app as one Python
+Function (zero-config FastAPI), with the static UI on Vercel's CDN. Function instances do not share
+`/tmp`, so captures, overlays and session state are mirrored into Vercel's regional Runtime Cache and
+sessions are always read from it. Any instance can therefore continue any inspection, which plays the
+role S3 plays on AWS.
 
 ## 6. Data
 
@@ -143,5 +157,6 @@ evidence expires from S3 after seven days.
 * Classical detectors with hand-calibrated thresholds; next: a small learned model trained on a properly
   licensed, annotated corpus of real repair imagery (collected with shops, with consent).
 * Planar homography; next: local refinement (ECC / optical flow) for parallax around tall parts.
-* Physical calibration (µm/px) from a stage micrometer for real measurements.
+* Physical scale today comes from a known lead pitch or a ruler over a known distance, valid in that plane
+  only; next: stage-micrometer calibration and perspective correction.
 * Brown staining and eaten traces are not localised.

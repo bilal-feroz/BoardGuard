@@ -30,6 +30,11 @@ The same image runs locally (`docker run -p 8080:8080`), so the judged
 behaviour is identical on a laptop and on AWS. The UI is a static export
 served by the same FastAPI app, so a single Function URL serves both.
 
+The live demo runs the same code on **Vercel**: the static export is served
+from Vercel's CDN (`public/`) and the FastAPI app (`app/main.py`) runs as one
+Python Function via Vercel's zero-config FastAPI support, so the UI again
+calls `/api/*` on its own origin (`infrastructure/vercel`).
+
 ## OpenCV processing flow
 
 ```mermaid
@@ -99,6 +104,7 @@ and tests:
 |---|---|---|---|
 | Local filesystem | development | `services/vision-api/var/store` | JSON files |
 | S3 | `BOARDGUARD_S3_BUCKET` set (AWS) | private objects, SSE-S3, served by 1-hour presigned URLs | JSON objects, so any Lambda instance can continue any inspection |
+| `/tmp` + Vercel Runtime Cache | `VERCEL` set (live demo) | written to the instance's `/tmp` and mirrored (base64) into the regional Runtime Cache, 24 h TTL; served through `/api/artifacts` | always read from the shared cache first, so any function instance continues any inspection |
 
 The bucket has a lifecycle rule that deletes `boardguard/` objects after 7 days.
 
@@ -116,7 +122,16 @@ The bucket has a lifecycle rule that deletes `boardguard/` objects after 7 days.
 ## Human-in-the-loop controls
 
 Technician actions (`POST /api/inspections/{id}/actions`): confirm/dismiss a finding,
-acknowledge a no-findings result, decline a recapture, start before/after verification,
-confirm visual checks, record a technician-entered electrical measurement, close or stop.
+withdraw (undo) a decision while its review is still the current step (rule R-H2; also
+when the last dismissal closed the inspection automatically, never after a new capture,
+an explicit close or a verification), acknowledge a no-findings result, decline a
+recapture, start before/after verification, confirm visual checks, record a
+technician-entered electrical measurement, close or stop. Sessions expose
+`undoable_decisions`.
+
+Region evidence check (`POST /api/inspections/{id}/region-check` with an observation id and
+a rectangle): runs `extract_region_of_interest` plus a lead-row analysis inside the area and
+reports glare, focus, exposure and lead resolution. It is recorded in the trace as a
+technician-initiated tool call and never changes the agent state or pending action.
 The demo has no authentication, so actions are attributed to an "unauthenticated demo user";
 no names or signatures are generated.
