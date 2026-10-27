@@ -78,7 +78,7 @@ const SCENE = Q.get("scene") || "title";
 const N = +Q.get("n") || 5;           // narration length (s)
 const L = +Q.get("l") || 0.5;         // narration starts at
 const D = +Q.get("d") || L + N + 1;   // scene length
-const TEAM = (Q.get("team") || "Bilal Feroz|Fuad Ahamed").split("|");
+const TEAM = (Q.get("team") || "Bilal Feroz|Fuad Ahamed|Muhammed Umar").split("|");
 const AWS_URL = Q.get("aws") || "";
 const stage = document.getElementById("stage");
 const at = (f) => L + f * N;           // time of a point in the narration (fraction)

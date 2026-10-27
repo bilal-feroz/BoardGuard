@@ -22,11 +22,15 @@ LIMIT="$(aws lambda get-account-settings --region "$REGION" --query AccountLimit
 CONCURRENCY=5
 if [ "$LIMIT" -lt 15 ]; then CONCURRENCY=0; echo "==> Lambda concurrency limit is ${LIMIT}: deploying without reserved concurrency"; fi
 
-echo "==> Building static UI (same-origin API)"
-(cd "$ROOT/apps/web" && { [ -d node_modules ] || npm ci --no-audit --no-fund; } && rm -f .env.production.local && NEXT_PUBLIC_API_BASE="" npx next build)
+if [ -n "${SKIP_BUILD:-}" ] && [ -f "$ROOT/dist/boardguard-lambda.zip" ]; then
+  echo "==> Reusing dist/boardguard-lambda.zip (SKIP_BUILD)"
+else
+  echo "==> Building static UI (same-origin API)"
+  (cd "$ROOT/apps/web" && { [ -d node_modules ] || npm ci --no-audit --no-fund; } && rm -f .env.production.local && NEXT_PUBLIC_API_BASE="" npx next build)
 
-echo "==> Packaging Lambda zip"
-python "$ROOT/infrastructure/aws/package_lambda.py"
+  echo "==> Packaging Lambda zip"
+  python "$ROOT/infrastructure/aws/package_lambda.py"
+fi
 
 if ! aws s3api head-bucket --bucket "$CODE_BUCKET" 2>/dev/null; then
   if [ "$REGION" = "us-east-1" ]; then

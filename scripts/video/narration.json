@@ -1,7 +1,7 @@
 {
   "voice": "af_heart",
   "speed": 1.08,
-  "team": ["Bilal Feroz", "Fuad Ahamed"],
+  "team": ["Bilal Feroz", "Fuad Ahamed", "Muhammed Umar"],
   "segments": [
     {
       "id": "hook", "kind": "card", "captions": false,
