@@ -17,7 +17,9 @@ Parameters:
   MaxConcurrency:
     Type: Number
     Default: 5
-    Description: Reserved concurrency cap - bounds cost and abuse of the public demo endpoint.
+    Description: >
+      Reserved concurrency cap - bounds cost and abuse of the public demo endpoint. 0 = no reservation
+      (an account still on the new-account limit of 10 concurrent executions cannot reserve any).
   EvidenceRetentionDays:
     Type: Number
     Default: 7
@@ -28,6 +30,9 @@ Parameters:
     Type: String
     Default: "*"
     Description: CORS origin for the Function URL (the UI is served same-origin, so this only matters for external callers).
+
+Conditions:
+  CapConcurrency: !Not [!Equals [!Ref MaxConcurrency, "0"]]
 
 Resources:
   EvidenceBucket:
@@ -91,7 +96,7 @@ Resources:
       MemorySize: !Ref MemorySize
       Timeout: 60
       EphemeralStorage: { Size: 1024 }
-      ReservedConcurrentExecutions: !Ref MaxConcurrency
+      ReservedConcurrentExecutions: !If [CapConcurrency, !Ref MaxConcurrency, !Ref AWS::NoValue]
       LoggingConfig:
         LogGroup: !Ref LogGroup
         LogFormat: Text

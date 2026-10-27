@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BoardGuard video cards</title>
+<!-- Motion-graphics scenes for the demo video. Deterministic: render-cards.mjs calls
+     window.__seek(t) for every frame, which sets every animation's currentTime. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=block" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B1011; --panel: #121A1C; --line: rgba(240,240,235,.12); --ink: #F0F0EB; --muted: #9BA7A7;
+    --dim: #6C7878; --teal: #79ADA0; --teal2: #9fd3c5; --amber: #D8AA68; --red: #D97A6C; --aws: #FF9900;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; animation-play-state: paused !important; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--ink);
+    font-family: "IBM Plex Sans", "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: "IBM Plex Mono", Consolas, monospace; }
+  .abs { position: absolute; }
+  .grid-bg { position: absolute; inset: 0; background-image:
+      linear-gradient(rgba(121,173,160,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(121,173,160,.06) 1px, transparent 1px);
+    background-size: 60px 60px; mask-image: radial-gradient(ellipse at 50% 50%, #000 30%, transparent 80%); }
+  .glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .35; }
+  .kicker { font: 500 22px "IBM Plex Mono", monospace; letter-spacing: .32em; text-transform: uppercase; color: var(--teal); }
+  .h1 { font-weight: 600; font-size: 64px; letter-spacing: -.01em; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.85) 100%); pointer-events: none; }
+  .scan { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 4px); mix-blend-mode: multiply; pointer-events: none; }
+  .fadeblack { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 99; }
+
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
+  @keyframes toBlack { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes fromBlack { from { opacity: 1 } to { opacity: 0 } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(34px) } to { opacity: 1; transform: none } }
+  @keyframes fadeLeft { from { opacity: 0; transform: translateX(-40px) } to { opacity: 1; transform: none } }
+  @keyframes pop { 0% { opacity: 0; transform: scale(.6) } 70% { opacity: 1; transform: scale(1.04) } 100% { opacity: 1; transform: scale(1) } }
+  @keyframes slam { 0% { opacity: 0; transform: scale(2.2); filter: blur(14px) } 55% { opacity: 1; transform: scale(.96); filter: blur(0) } 75% { transform: scale(1.02) } 100% { opacity: 1; transform: scale(1) } }
+  @keyframes slamOut { from { opacity: 1; transform: scale(1) } to { opacity: 0; transform: scale(.92); filter: blur(6px) } }
+  @keyframes kb1 { from { transform: scale(1.05) translate(0, 0) } to { transform: scale(1.32) translate(-3%, -2%) } }
+  @keyframes kb2 { from { transform: scale(1.25) translate(2%, 1%) } to { transform: scale(1.05) translate(0, 0) } }
+  @keyframes kb3 { from { transform: scale(1.6) translate(-14%, 8%) } to { transform: scale(2.6) translate(-24%, 12%) } }
+  @keyframes flash { 0% { opacity: 0 } 18% { opacity: .95 } 100% { opacity: 0 } }
+  @keyframes blurIn { from { filter: blur(0) brightness(1) } to { filter: blur(9px) brightness(.8) } }
+  @keyframes shake { 0%,100% { transform: translate(0,0) } 20% { transform: translate(-6px,3px) } 40% { transform: translate(5px,-4px) } 60% { transform: translate(-4px,-2px) } 80% { transform: translate(3px,4px) } }
+  @keyframes draw { from { stroke-dashoffset: var(--len) } to { stroke-dashoffset: 0 } }
+  @keyframes wipe { from { clip-path: inset(0 100% 0 0) } to { clip-path: inset(0 0 0 0) } }
+  @keyframes sweep { from { transform: translateX(-120%) } to { transform: translateX(120%) } }
+  @keyframes spin { from { transform: rotate(0) } to { transform: rotate(360deg) } }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(121,173,160,.0) } 50% { box-shadow: 0 0 40px 6px rgba(121,173,160,.45) } }
+  @keyframes hl { from { border-color: var(--line); background: var(--panel); transform: scale(1) } to { border-color: var(--teal); background: #16302b; transform: scale(1.05) } }
+  @keyframes hlAmber { from { border-color: var(--line); background: var(--panel); transform: scale(1) } to { border-color: var(--amber); background: #33281a; transform: scale(1.05) } }
+  @keyframes travel { from { offset-distance: 0% } to { offset-distance: 100% } }
+  @keyframes letter { from { opacity: 0; transform: translateY(40px) rotateX(70deg); filter: blur(8px) } to { opacity: 1; transform: none; filter: blur(0) } }
+  @keyframes grow { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+
+  /* ---------- shared pieces */
+  .box { position: absolute; border: 1.5px solid var(--line); background: var(--panel); border-radius: 16px; padding: 22px 26px; }
+  .box h3 { font-size: 30px; font-weight: 600; margin-bottom: 8px; }
+  .box p { font-size: 21px; color: var(--muted); line-height: 1.4; }
+  .tag { display: inline-block; font: 500 18px "IBM Plex Mono", monospace; padding: 5px 12px; border-radius: 8px; border: 1px solid; }
+  .chip { display: inline-flex; align-items: center; gap: 10px; font: 500 24px "IBM Plex Mono", monospace; color: var(--ink);
+    padding: 10px 20px; border-radius: 999px; border: 1px solid rgba(121,173,160,.45); background: rgba(121,173,160,.08); }
+  .chip i { width: 9px; height: 9px; border-radius: 50%; background: var(--teal); display: inline-block; }
+  .word { position: absolute; left: 0; right: 0; text-align: center; font-weight: 700; letter-spacing: -.02em; }
+  .reticle { position: absolute; left: 50%; top: 50%; width: 860px; height: 860px; margin: -430px 0 0 -430px; }
+  .tile { position: absolute; width: 530px; height: 290px; border-radius: 18px; border: 1.5px solid var(--line); background: linear-gradient(160deg, #142022, #0f1617); padding: 28px 32px; overflow: hidden; }
+  .tile .num { font: 600 92px "IBM Plex Mono", monospace; color: var(--teal2); letter-spacing: -.03em; line-height: 1; }
+  .tile .lbl { font-size: 27px; font-weight: 500; margin-top: 18px; }
+  .tile .sub { font-size: 19px; color: var(--muted); margin-top: 8px; line-height: 1.35; }
+  .tile .bar { position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: var(--teal); transform-origin: left; }
+</style>
+</head>
+<body>
+<div id="stage" style="position:absolute;inset:0"></div>
+<script>
+const Q = new URLSearchParams(location.search);
+const SCENE = Q.get("scene") || "title";
+const N = +Q.get("n") || 5;           // narration length (s)
+const L = +Q.get("l") || 0.5;         // narration starts at
+const D = +Q.get("d") || L + N + 1;   // scene length
+const TEAM = (Q.get("team") || "Bilal Feroz|Fuad Ahamed").split("|");
+const AWS_URL = Q.get("aws") || "";
+const stage = document.getElementById("stage");
+const at = (f) => L + f * N;           // time of a point in the narration (fraction)
+const frameFns = [];
+
+function el(tag, cls, html, css, parent = stage) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html != null) e.innerHTML = html;
+  if (css) e.style.cssText = css;
+  parent.appendChild(e);
+  return e;
+}
+/** Append a CSS animation (name, duration s, delay s, easing) to an element. */
+function A(e, name, dur, delay, ease = "cubic-bezier(.2,.8,.2,1)", extra = "both") {
+  const a = `${name} ${dur}s ${ease} ${delay}s ${extra}`;
+  e.style.animation = e.style.animation ? `${e.style.animation}, ${a}` : a;
+  return e;
+}
+function svg(w, h, inner, css) {
+  const d = el("div", "abs", `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none">${inner}</svg>`, css);
+  return d;
+}
+function drawPaths(root, dur, delay, stagger = 0) {
+  root.querySelectorAll("[data-draw]").forEach((p, i) => {
+    const len = p.getTotalLength();
+    p.style.strokeDasharray = len;
+    p.style.setProperty("--len", len);
+    p.style.strokeDashoffset = len;
+    A(p, "draw", dur, delay + i * stagger, "cubic-bezier(.65,0,.35,1)");
+  });
+}
+function outro(t0 = D - 0.45, dur = 0.45) { A(el("div", "fadeblack"), "toBlack", dur, t0, "linear"); }
+function intro(dur = 0.35) { A(el("div", "fadeblack", null, "opacity:1"), "fromBlack", dur, 0, "linear"); }
+const LOGO = (s = 120, stroke = "#79ADA0") => `<svg width="${s}" height="${s}" viewBox="0 0 120 120" fill="none">
+  <path data-draw d="M60 8 L104 30 L104 66 C104 90 84 106 60 114 C36 106 16 90 16 66 L16 30 Z" stroke="${stroke}" stroke-width="5" stroke-linejoin="round"/>
+  <circle data-draw cx="60" cy="60" r="22" stroke="#F0F0EB" stroke-width="4.5"/>
+  <path data-draw d="M60 26 V42 M60 78 V94 M26 60 H42 M78 60 H94" stroke="#F0F0EB" stroke-width="4.5" stroke-linecap="round"/>
+  <circle cx="60" cy="60" r="5" fill="${stroke}"/></svg>`;
+
+// ======================================================================= scenes
+const scenes = {};
+
+scenes.hook = () => {
+  const photos = [
+    ["../../datasets/raw/corrosion/corrosion_02_nicd-leak-ic-socket-pins.jpg", 0, at(0.21), "kb1"],
+    ["../../datasets/raw/fine_pitch/fine_pitch_03_tssop48-idt-topdown.jpg", at(0.21), at(0.45), "kb2"],
+    ["../../datasets/raw/clean/clean_01_microscope-smd-glare-shield.jpg", at(0.45), at(0.55), "kb1"],
+    ["../../datasets/raw/fine_pitch/fine_pitch_01_tqfp144-xilinx-topdown.jpg", at(0.55), D, "kb3"],
+  ];
+  const view = el("div", "abs", null, "inset:0;overflow:hidden");
+  photos.forEach(([src, t0, t1, kb], i) => {
+    const wrap = el("div", "abs", null, "inset:0;opacity:0", view);
+    A(wrap, "fadeIn", i ? 0.18 : 0.6, t0, "linear");
+    if (i < photos.length - 1) A(wrap, "fadeOut", 0.2, t1, "linear", "forwards");
+    const img = el("img", "abs", null, `inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(1.1) contrast(1.08)`, wrap);
+    img.src = src;
+    A(img, kb, t1 - t0 + 0.6, t0, "linear");
+    if (i === 3) A(img, "blurIn", 0.01, D, "linear");
+  });
+  // blur beat: defocus the second photo exactly when "blur" is said
+  const blurTarget = view.children[2].firstChild;
+  blurTarget.style.animation += `, blurIn 0.35s ease-out ${at(0.49)}s both`;
+  el("div", "vignette");
+  el("div", "scan");
+  // microscope reticle
+  const ret = svg(860, 860, `
+    <circle cx="430" cy="430" r="400" stroke="rgba(240,240,235,.35)" stroke-width="2"/>
+    <circle cx="430" cy="430" r="300" stroke="rgba(121,173,160,.35)" stroke-width="1.5" stroke-dasharray="4 10"/>
+    <path d="M430 20 V200 M430 660 V840 M20 430 H200 M660 430 H840" stroke="rgba(240,240,235,.45)" stroke-width="2"/>
+    ${Array.from({ length: 72 }, (_, i) => { const a = i * 5 * Math.PI / 180, r1 = 400, r2 = i % 6 ? 388 : 372;
+      return `<path d="M${430 + r1 * Math.cos(a)} ${430 + r1 * Math.sin(a)} L${430 + r2 * Math.cos(a)} ${430 + r2 * Math.sin(a)}" stroke="rgba(240,240,235,.4)" stroke-width="1.5"/>`; }).join("")}`, "");
+  ret.className = "reticle";
+  A(ret, "fadeIn", 0.8, 0.2, "linear");
+  A(ret.firstChild, "spin", 40, 0, "linear", "both infinite");
+  const hud = el("div", "abs mono", "REPAIR BENCH · MICROSCOPE", "left:70px;top:60px;font-size:22px;letter-spacing:.3em;color:rgba(240,240,235,.75)");
+  A(hud, "fadeIn", 0.6, 0.3);
+  // glare flash
+  const fl = el("div", "abs", null, "inset:0;background:radial-gradient(circle at 62% 40%, #fff 0%, rgba(255,255,255,.75) 18%, transparent 55%);opacity:0;mix-blend-mode:screen");
+  A(fl, "flash", 0.9, at(0.44), "ease-out");
+  const words = [
+    ["GLARE.", at(0.44), at(0.49) - 0.05, "var(--ink)", 190],
+    ["BLUR.", at(0.49), at(0.56) - 0.05, "var(--ink)", 190],
+    ["0.5 mm PITCH.", at(0.56), at(0.76) - 0.05, "var(--amber)", 150],
+  ];
+  words.forEach(([w, t0, t1, c, fs]) => {
+    const e = el("div", "word", w, `top:${540 - fs * 0.62}px;font-size:${fs}px;color:${c};text-shadow:0 8px 60px rgba(0,0,0,.8);opacity:0`);
+    A(e, "slam", 0.42, t0);
+    A(e, "slamOut", 0.18, t1, "ease-in", "forwards");
+  });
+  // lead-pitch bracket over the TQFP leads
+  const br = svg(420, 120, `<path d="M20 90 V40 M400 90 V40" stroke="#D8AA68" stroke-width="5"/><path data-draw d="M20 65 H400" stroke="#D8AA68" stroke-width="4"/>`, "left:750px;top:700px;opacity:0");
+  A(br, "fadeIn", 0.2, at(0.57));
+  A(br, "fadeOut", 0.2, at(0.76) - 0.05, "linear", "forwards");
+  drawPaths(br, 0.5, at(0.57));
+  const guess = el("div", "word", "EVERY PHOTO BECOMES A <span style='color:var(--amber)'>GUESS.</span>",
+    "top:470px;font-size:104px;text-shadow:0 10px 70px rgba(0,0,0,.9);opacity:0");
+  A(guess, "fadeUp", 0.5, at(0.77));
+  A(guess.lastChild, "shake", 0.35, at(0.95), "linear");
+  const dark = el("div", "abs", null, "inset:0;background:rgba(5,8,9,.55);opacity:0");
+  A(dark, "fadeIn", 0.5, at(0.76), "linear");
+  stage.appendChild(guess);
+  outro(D - 0.35, 0.35);
+};
+
+scenes.title = () => {
+  el("div", "grid-bg");
+  const g = el("div", "glow", null, "left:660px;top:240px;width:600px;height:600px;background:#79ADA0");
+  A(g, "fadeIn", 1.5, 0, "linear");
+  const logo = el("div", "abs", LOGO(150), "left:885px;top:200px");
+  drawPaths(logo, 0.9, 0.1, 0.12);
+  A(logo, "pop", 0.6, 0.05);
+  const word = el("div", "abs", null, "left:0;right:0;top:390px;text-align:center;font:700 150px 'IBM Plex Sans';letter-spacing:.06em;perspective:800px");
+  [..."BOARDGUARD"].forEach((ch, i) => { const s = el("span", null, ch, "display:inline-block", word); A(s, "letter", 0.6, 0.35 + i * 0.05); });
+  const shine = el("div", "abs", null, "left:0;right:0;top:390px;height:190px;background:linear-gradient(100deg, transparent 40%, rgba(255,255,255,.35) 50%, transparent 60%);mix-blend-mode:overlay");
+  A(shine, "sweep", 1.2, 1.2, "ease-in-out");
+  const tl = el("div", "abs", "An AI microscope assistant that <span style='color:var(--teal2)'>knows when to look again.</span>",
+    "left:0;right:0;top:610px;text-align:center;font-size:46px;font-weight:400;color:var(--ink)");
+  A(tl, "fadeUp", 0.7, at(0.25));
+  const chips = el("div", "abs", null, "left:0;right:0;top:730px;display:flex;justify-content:center;gap:22px");
+  ["OpenCV 5.0.0", "Agentic vision", "Human in the loop", "Electronics repair"].forEach((c, i) => {
+    const e = el("div", "chip", `<i></i>${c}`, null, chips);
+    A(e, "fadeUp", 0.5, at(0.55) + i * 0.12);
+  });
+  intro(0.3);
+  outro();
+};
+
+scenes.loop = () => {
+  el("div", "grid-bg");
+  const k = el("div", "abs kicker", "Perception → decision → action", "left:110px;top:90px");
+  A(k, "fadeLeft", 0.6, 0.2);
+  const h = el("div", "abs h1", "An inspection loop, not a one-shot detector", "left:110px;top:135px;font-size:54px");
+  A(h, "fadeLeft", 0.6, 0.35);
+  const cx = 960, cy = 620, RX = 560, RY = 290;
+  const P = (deg) => [cx + RX * Math.cos(deg * Math.PI / 180), cy + RY * Math.sin(deg * Math.PI / 180)];
+  // loop ring (ellipse) with arrows between the nodes
+  const ring = svg(1920, 1080, `
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#79ADA0"/></marker></defs>
+    ${[0, 1, 2, 3].map((i) => { const [x0, y0] = P(-90 + i * 90 + 24), [x1, y1] = P(-90 + (i + 1) * 90 - 24);
+      return `<path data-draw d="M${x0} ${y0} A${RX} ${RY} 0 0 1 ${x1} ${y1}" stroke="#79ADA0" stroke-width="4" marker-end="url(#ar)" opacity=".8"/>`; }).join("")}`, "left:0;top:0");
+  drawPaths(ring, 0.6, at(0.05), 0.35);
+  // travelling comet
+  const comet = el("div", "abs", null, `left:0;top:0;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#bff5e7;box-shadow:0 0 30px 10px rgba(121,173,160,.8);opacity:0`);
+  A(comet, "fadeIn", 0.4, at(0.25));
+  frameFns.push((t) => { const [x, y] = P(-90 + (t - at(0.25)) * 55); comet.style.left = x + "px"; comet.style.top = y + "px"; });
+  const center = el("div", "abs", "<div class='mono' style='font-size:20px;letter-spacing:.2em;color:var(--teal)'>AGENTIC VISION</div><div style='font-size:30px;margin-top:10px;line-height:1.3'>OpenCV 5 output changes<br>what happens next</div>",
+    `left:${cx - 230}px;top:${cy - 60}px;width:460px;text-align:center`);
+  A(center, "fadeIn", 0.8, at(0.12));
+  const nodes = [
+    ["PERCEIVE", "OpenCV 5", "quality gate · candidates · registration · change map", 0, at(0.24), "hl"],
+    ["DECIDE", "Agent policies", "16 explicit, testable rules · R-Q1 … R-V3", 1, at(0.43), "hl"],
+    ["ACT", "Request a better look", "“Diffuse light, same framing” · review · verify", 2, at(0.66), "hlAmber"],
+    ["HUMAN", "Technician decides", "confirm · dismiss · undo · nothing auto-cleared", 3, at(0.9), "hl"],
+  ];
+  nodes.forEach(([kick, title, sub, i, tHi, hl]) => {
+    const [x, y] = P(-90 + i * 90);
+    const w = 430, hgt = 150;
+    const b = el("div", "box", `<div class="mono" style="font-size:18px;letter-spacing:.25em;color:${hl === "hlAmber" ? "var(--amber)" : "var(--teal)"}">${kick}</div><h3 style="margin-top:6px">${title}</h3><p>${sub}</p>`,
+      `left:${x - w / 2}px;top:${y - hgt / 2}px;width:${w}px;min-height:${hgt}px`);
+    A(b, "pop", 0.5, at(0.03) + i * 0.3);
+    A(b, hl, 0.35, tHi, "ease-out", "forwards");
+  });
+  const nog = el("div", "abs", "Weak evidence → no guess", "left:1330px;top:960px;font:600 34px 'IBM Plex Sans';color:var(--amber)");
+  A(nog, "fadeUp", 0.5, at(0.7));
+  intro(0.25);
+  outro();
+};
+
+scenes.arch = () => (Q.get("variant") === "lightsail" ? archLightsail() : archLambda());
+
+function archLightsail() {
+  el("div", "grid-bg");
+  A(el("div", "abs kicker", "Architecture", "left:110px;top:80px"), "fadeLeft", 0.5, 0.15);
+  A(el("div", "abs h1", "OpenCV 5 on AWS, end to end", "left:110px;top:122px;font-size:54px"), "fadeLeft", 0.5, 0.3);
+  const bnd = svg(1920, 1080, `<rect x="600" y="250" width="1240" height="560" rx="26" stroke="#FF9900" stroke-width="3" stroke-dasharray="14 10"/>`, "left:0;top:0");
+  A(bnd, "fadeIn", 0.6, at(0.06));
+  A(el("div", "abs mono", "AWS · us-east-1", "left:630px;top:228px;padding:4px 14px;background:var(--bg);color:#FF9900;font-size:22px;letter-spacing:.12em"), "fadeIn", 0.5, at(0.07));
+  const wb = el("div", "box", "<div class='mono' style='font-size:18px;letter-spacing:.2em;color:var(--teal)'>BROWSER</div><h3 style='margin-top:6px'>Technician workstation</h3><p>Next.js 16 static export · 3D board · microscope canvas · same-origin /api</p>",
+    "left:90px;top:400px;width:440px;min-height:200px");
+  A(wb, "fadeLeft", 0.5, at(0.03));
+  const ls = el("div", "box", "<div class='mono' style='font-size:18px;letter-spacing:.2em;color:#FF9900'>AMAZON LIGHTSAIL · UBUNTU 24.04 · 2 vCPU · 2 GB</div>", "left:650px;top:290px;width:640px;height:490px;border-color:rgba(255,153,0,.55)");
+  A(ls, "pop", 0.5, at(0.12));
+  const inner = [
+    ["FastAPI vision API · uvicorn (systemd)", "serves the workstation UI and /api on port 80", at(0.2)],
+    ["Inspection agent", "state machine · 16 policy rules · full trace", at(0.33)],
+    ["OpenCV 5.0.0 pipelines", "quality · candidates · registration (SIFT + MAGSAC) · change · multi-view", at(0.4)],
+  ];
+  inner.forEach(([t, s, t0], i) => {
+    const b = el("div", "box", `<h3 style="font-size:25px">${t}</h3><p style="font-size:18px">${s}</p>`, `left:678px;top:${350 + i * 140}px;width:584px;padding:14px 20px;background:#0f1718`);
+    A(b, "fadeUp", 0.45, t0);
+    if (i) A(b, "hl", 0.3, at(0.42), "ease-out", "forwards");
+  });
+  const s3 = el("div", "box", "<div class='mono' style='font-size:18px;letter-spacing:.2em;color:#7AA116'>AMAZON S3</div><h3 style='margin-top:6px;font-size:26px'>Release bucket</h3><p style='font-size:18px'>private · SSE-S3 · fetched at boot through a short-lived presigned URL</p>",
+    "left:1360px;top:300px;width:440px;min-height:200px");
+  A(s3, "pop", 0.5, at(0.56));
+  const iac = el("div", "box", "<div class='mono' style='font-size:18px;letter-spacing:.2em;color:#FF9900'>IN THE REPO · CLOUDFORMATION</div><h3 style='margin-top:6px;font-size:26px'>Lambda stack</h3><p style='font-size:18px'>Function URL · S3 evidence store (7-day expiry) · CloudWatch logs · least-privilege IAM</p>",
+    "left:1360px;top:540px;width:440px;min-height:220px;border-style:dashed;border-color:rgba(255,153,0,.6)");
+  A(iac, "pop", 0.5, at(0.74));
+  const links = [["M530 500 L650 500", at(0.13)], ["M1360 400 L1290 400", at(0.58)]];
+  const lk = svg(1920, 1080, links.map(([d]) => `<path data-draw d="${d}" stroke="#79ADA0" stroke-width="4"/>`).join(""), "left:0;top:0");
+  lk.querySelectorAll("path").forEach((p, i) => { const len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.setProperty("--len", len); A(p, "draw", 0.4, links[i][1], "ease-out"); });
+  links.forEach(([d, t0]) => {
+    for (let j = 0; j < 3; j++) {
+      const dot = el("div", "abs", null, `left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#bff5e7;box-shadow:0 0 16px 4px rgba(121,173,160,.8);offset-path:path('${d}');offset-rotate:0deg;opacity:0`);
+      A(dot, "fadeIn", 0.2, t0 + 0.4 + j * 0.33);
+      A(dot, "travel", 1.0, t0 + 0.4 + j * 0.33, "linear", "both infinite");
+    }
+  });
+  A(el("div", "abs", "HTTP · same origin", "left:540px;top:455px;font:500 18px 'IBM Plex Mono';color:var(--muted)"), "fadeIn", 0.4, at(0.16));
+  A(el("div", "abs", "One command deploys it: <span class='mono' style='color:var(--teal2)'>infrastructure/aws/lightsail/deploy-lightsail.sh</span>",
+    "left:600px;top:850px;font-size:26px;color:var(--ink)"), "fadeUp", 0.5, at(0.62));
+  intro(0.25);
+  outro();
+}
+
+function archLambda() {
+  el("div", "grid-bg");
+  A(el("div", "abs kicker", "Architecture", "left:110px;top:80px"), "fadeLeft", 0.5, 0.15);
+  A(el("div", "abs h1", "OpenCV 5 on AWS, end to end", "left:110px;top:122px;font-size:54px"), "fadeLeft", 0.5, 0.3);
+  // AWS boundary (CloudFormation stack)
+  const bnd = svg(1920, 1080, `<rect data-draw x="640" y="250" width="1200" height="700" rx="26" stroke="#FF9900" stroke-width="3" stroke-dasharray="14 10"/>`, "left:0;top:0");
+  const r = bnd.querySelector("rect"); r.style.strokeDasharray = "14 10";
+  A(bnd, "fadeIn", 0.6, at(0.02));
+  const awsLbl = el("div", "abs mono", "AWS · us-east-1", "left:670px;top:228px;padding:4px 14px;background:var(--bg);color:#FF9900;font-size:22px;letter-spacing:.12em");
+  A(awsLbl, "fadeIn", 0.5, at(0.03));
+  const cfn = el("div", "abs", "<span class='mono' style='color:#FF9900'>CloudFormation</span> &nbsp;one template · one stack · least-privilege IAM role",
+    "left:930px;top:968px;font-size:24px;color:var(--ink);padding:10px 22px;border:1.5px solid rgba(255,153,0,.6);border-radius:12px;background:#1c160c");
+  A(cfn, "pop", 0.5, at(0.8));
+  A(bnd, "pulse", 1.2, at(0.8), "ease-in-out");
+  const wb = el("div", "box", "<div class='mono' style='font-size:18px;letter-spacing:.2em;color:var(--teal)'>BROWSER</div><h3 style='margin-top:6px'>Technician workstation</h3><p>Next.js 16 static export · React Three Fiber 3D board · microscope canvas</p>",
+    "left:90px;top:420px;width:470px;min-height:200px");
+  A(wb, "fadeLeft", 0.5, at(0.04));
+  const url = el("div", "box", "<h3 style='font-size:24px'>Lambda Function URL</h3><p style='font-size:18px'>HTTPS · rate-limited</p>", "left:680px;top:465px;width:250px;padding:18px 20px");
+  A(url, "pop", 0.5, at(0.17));
+  const lam = el("div", "box", "<div class='mono' style='font-size:18px;letter-spacing:.2em;color:#FF9900'>AWS LAMBDA · PYTHON 3.12</div>", "left:985px;top:300px;width:500px;height:590px;border-color:rgba(255,153,0,.55)");
+  A(lam, "pop", 0.5, at(0.24));
+  const inner = [
+    ["FastAPI vision API", "uploads · artifacts · reports · /api/runtime", at(0.27)],
+    ["Inspection agent", "state machine · 16 policy rules · full trace", at(0.33)],
+    ["OpenCV 5.0.0 pipelines", "quality · candidates · registration (SIFT + MAGSAC) · change · multi-view", at(0.4)],
+  ];
+  inner.forEach(([t, s, t0], i) => {
+    const b = el("div", "box", `<h3 style="font-size:25px">${t}</h3><p style="font-size:18px">${s}</p>`, `left:1010px;top:${360 + i * 170}px;width:450px;padding:16px 20px;background:#0f1718`);
+    A(b, "fadeUp", 0.45, t0);
+    A(b, i === 2 ? "hl" : "hl", 0.3, at(0.42) + i * 0.0, "ease-out", "forwards");
+  });
+  const s3 = el("div", "box", "<div class='mono' style='font-size:18px;letter-spacing:.2em;color:#7AA116'>AMAZON S3</div><h3 style='margin-top:6px;font-size:26px'>Evidence store</h3><p style='font-size:18px'>private · SSE-S3 · 7-day expiry · captures, overlays, sessions</p>",
+    "left:1545px;top:300px;width:275px;min-height:250px");
+  A(s3, "pop", 0.5, at(0.55));
+  const cw = el("div", "box", "<div class='mono' style='font-size:18px;letter-spacing:.2em;color:#E7157B'>CLOUDWATCH</div><h3 style='margin-top:6px;font-size:26px'>Logs</h3><p style='font-size:18px'>per-request timing · tool calls · errors</p>",
+    "left:1545px;top:620px;width:275px;min-height:230px");
+  A(cw, "pop", 0.5, at(0.69));
+  // connectors + packets
+  const links = [
+    ["M560 520 L680 520", at(0.15)], ["M930 520 L985 520", at(0.22)],
+    ["M1485 440 L1545 420", at(0.56)], ["M1485 720 L1545 735", at(0.7)],
+  ];
+  const lk = svg(1920, 1080, links.map(([d]) => `<path data-draw d="${d}" stroke="#79ADA0" stroke-width="4"/>`).join(""), "left:0;top:0");
+  lk.querySelectorAll("path").forEach((p, i) => { const len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.setProperty("--len", len); A(p, "draw", 0.4, links[i][1], "ease-out"); });
+  links.forEach(([d, t0], i) => {
+    for (let j = 0; j < 3; j++) {
+      const dot = el("div", "abs", null, `left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#bff5e7;box-shadow:0 0 16px 4px rgba(121,173,160,.8);offset-path:path('${d}');offset-rotate:0deg;opacity:0`);
+      A(dot, "fadeIn", 0.2, t0 + 0.4 + j * 0.33);
+      A(dot, "travel", 1.0, t0 + 0.4 + j * 0.33, "linear", "both infinite");
+    }
+  });
+  intro(0.25);
+  outro();
+};
+
+scenes.results = () => {
+  el("div", "grid-bg");
+  A(el("div", "abs kicker", "Evaluation · reproducible", "left:110px;top:80px"), "fadeLeft", 0.5, 0.1);
+  A(el("div", "abs h1", "We measured it", "left:110px;top:122px;font-size:58px"), "fadeLeft", 0.5, 0.25);
+  A(el("div", "abs mono", "scripts/evaluate.py → docs/evaluation/results.md", "right:110px;top:150px;font-size:22px;color:var(--dim)"), "fadeIn", 0.5, 0.4);
+  const W = 530, Hh = 290, gx = 70, x0 = 110, y0 = 260;
+  const tiles = [
+    { num: 81, fmt: (v) => `${Math.round(v)}/81`, lbl: "known warps registered", sub: "real photos, random homographies · 100 %", t: at(0.07) },
+    { num: 0.09, fmt: (v) => `${v.toFixed(2)} px`, lbl: "median corner error", sub: "worst case 0.52 px · SIFT + MAGSAC", t: at(0.2) },
+    { num: 23, fmt: (v) => `${Math.round(v)}/23`, lbl: "unrelated pairs rejected", sub: "registration fails safely: no overlay drawn", t: at(0.38) },
+    { custom: true, lbl: "synthetic glare cases correct", sub: "single image: 5/10 · after one targeted recapture: 10/10", t: at(0.51), t2: at(0.69) },
+    { num: 9, fmt: (v) => `${Math.round(v)}/9`, lbl: "agent scenarios passed", sub: "scripted end-to-end runs via the HTTP API", t: at(0.82) },
+    { num: 0, fmt: () => "0", lbl: "unsafe automatic conclusions", sub: "nothing is auto-cleared; a technician decides", t: at(0.92) },
+  ];
+  tiles.forEach((d, i) => {
+    const x = x0 + (i % 3) * (W + gx), y = y0 + Math.floor(i / 3) * (Hh + 50);
+    const tile = el("div", "tile", null, `left:${x}px;top:${y}px`);
+    A(tile, "fadeUp", 0.5, d.t);
+    const num = el("div", "num", "", null, tile);
+    el("div", "lbl", d.lbl, null, tile);
+    el("div", "sub", d.sub, null, tile);
+    const bar = el("div", "bar", null, i === 3 ? "background:var(--amber)" : null, tile);
+    A(bar, "grow", 0.9, d.t + 0.1, "cubic-bezier(.65,0,.35,1)");
+    if (d.custom) {
+      num.style.fontSize = "64px";
+      num.style.whiteSpace = "nowrap";
+      num.innerHTML = "<span id='g1' style='color:var(--red)'>5/10</span><span id='g2' style='opacity:0'> → <span style='color:var(--teal2)'>10/10</span></span>";
+      const g2 = num.querySelector("#g2");
+      A(g2, "fadeIn", 0.4, d.t2);
+      frameFns.push((t) => { bar.style.background = t >= d.t2 ? "var(--teal)" : "var(--amber)"; });
+    } else {
+      frameFns.push((t) => { const k = Math.max(0, Math.min(1, (t - d.t - 0.1) / 0.9)); num.textContent = d.fmt(d.num * (1 - Math.pow(1 - k, 3))); });
+    }
+  });
+  const foot = el("div", "abs", "Data: 27 licensed real PCB photos (Wikimedia Commons) and synthetic boards with exact ground truth. Limits and failure cases are documented in the report.",
+    "left:110px;top:960px;width:1700px;font-size:22px;color:var(--muted)");
+  A(foot, "fadeIn", 0.6, at(0.1));
+  intro(0.25);
+  outro();
+};
+
+scenes.limits = () => {
+  el("div", "grid-bg");
+  A(el("div", "abs kicker", "Responsible by design", "left:240px;top:200px;color:var(--amber)"), "fadeLeft", 0.5, 0.1);
+  const rows = [
+    ["Not an electrical tester", "a photograph cannot prove or exclude a short", at(0.02)],
+    ["Not a validated diagnostic", "findings are suspected visual anomalies with heuristic scores", at(0.27)],
+  ];
+  rows.forEach(([a, b, t0], i) => {
+    const r = el("div", "abs", `<span style="display:inline-grid;place-items:center;width:58px;height:58px;border-radius:14px;border:2px solid var(--amber);color:var(--amber);font-size:34px;margin-right:28px;vertical-align:middle">✕</span><span style="font-size:52px;font-weight:600;vertical-align:middle">${a}</span><div style="margin:10px 0 0 88px;font-size:28px;color:var(--muted)">${b}</div>`,
+      `left:240px;top:${270 + i * 170}px`);
+    A(r, "fadeLeft", 0.5, t0);
+  });
+  const it = el("div", "abs", "<span style='color:var(--teal2)'>A visual inspection aid<br>that knows when to look again.</span>",
+    "left:240px;top:640px;font-size:76px;font-weight:600;line-height:1.15");
+  A(it, "fadeUp", 0.7, at(0.5));
+  const ln = el("div", "abs", null, "left:240px;top:615px;width:1440px;height:2px;background:var(--line);transform-origin:left");
+  A(ln, "grow", 0.8, at(0.45), "cubic-bezier(.65,0,.35,1)");
+  intro(0.25);
+  outro();
+};
+
+scenes.team = () => {
+  el("div", "grid-bg");
+  const g = el("div", "glow", null, "left:810px;top:40px;width:300px;height:300px;background:#79ADA0");
+  A(g, "fadeIn", 1.2, 0, "linear");
+  const logo = el("div", "abs", LOGO(110), "left:905px;top:110px");
+  drawPaths(logo, 0.8, 0.05, 0.1);
+  A(el("div", "abs", "BOARDGUARD", "left:0;right:0;top:250px;text-align:center;font:700 96px 'IBM Plex Sans';letter-spacing:.06em"), "fadeUp", 0.6, 0.2);
+  A(el("div", "abs", "See the damage. Guide the repair. Verify the result.", "left:0;right:0;top:372px;text-align:center;font-size:36px;color:var(--muted)"), "fadeUp", 0.6, 0.45);
+  A(el("div", "abs kicker", "The team", "left:0;right:0;top:470px;text-align:center"), "fadeIn", 0.5, at(0.1));
+  const names = el("div", "abs", TEAM.map((n) => `<span>${n}</span>`).join("<span style='color:var(--teal);margin:0 34px'>·</span>"),
+    "left:0;right:0;top:515px;text-align:center;font-size:66px;font-weight:600");
+  A(names, "fadeUp", 0.6, at(0.15));
+  const links = [
+    ["Code", "github.com/bilal-feroz/BoardGuard"],
+    ["Live demo", AWS_URL ? AWS_URL.replace(/^https?:\/\//, "").replace(/\/$/, "") : "boardguard-three.vercel.app"],
+  ];
+  if (AWS_URL) links.push(["Also on", "boardguard-three.vercel.app"]);
+  const lb = el("div", "abs", links.map(([k, v]) => `<div style="margin:10px 0"><span class="mono" style="color:var(--teal);font-size:22px;letter-spacing:.15em;text-transform:uppercase;margin-right:18px">${k}</span><span class="mono" style="font-size:30px">${v}</span></div>`).join(""),
+    "left:0;right:0;top:660px;text-align:center");
+  A(lb, "fadeIn", 0.6, at(0.5));
+  A(el("div", "abs", "OpenCV AI Competition 2026 · powered by AWS", "left:0;right:0;top:855px;text-align:center;font-size:30px;color:var(--amber)"), "fadeIn", 0.6, at(0.7));
+  A(el("div", "abs mono", "Real application footage · OpenCV 5.0.0 runs live in every shot · narration: Kokoro-82M synthetic voice · music generated in code · PCB photos: Wikimedia Commons (CC0 / PD / CC BY-SA)",
+    "left:120px;right:120px;top:990px;text-align:center;font-size:17px;color:var(--dim)"), "fadeIn", 0.8, at(0.8));
+  intro(0.3);
+  outro(D - 0.8, 0.8);
+};
+
+scenes[SCENE]();
+window.__ready = Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {}))]);
+window.__seek = (t) => {
+  for (const a of document.getAnimations()) a.currentTime = t * 1000;
+  for (const f of frameFns) f(t);
+};
+window.__seek(0);
+</script>
+</body>
+</html>

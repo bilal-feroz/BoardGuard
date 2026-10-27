@@ -47,7 +47,7 @@ export function candidateColor(status: FindingStatus | undefined, insufficient: 
 /** Human-readable name of the runtime reported by the vision API (X-BoardGuard-Runtime). */
 export function envLabel(env: string | null | undefined): string {
   if (!env) return "API";
-  return { "aws-lambda": "AWS Lambda", "aws-ecs": "AWS ECS", vercel: "Vercel", local: "local" }[env] ?? env;
+  return { "aws-lambda": "AWS Lambda", "aws-ecs": "AWS ECS", "aws-lightsail": "AWS Lightsail", vercel: "Vercel", local: "local" }[env] ?? env;
 }
 
 export const VERDICT_TONE: Record<string, Tone> = { ACCEPT: "teal", MARGINAL: "amber", REJECT: "coral" };

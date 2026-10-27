@@ -20,6 +20,12 @@ IMAGE="${REGISTRY}/${REPO}:${TAG}"
 
 echo "==> Account ${ACCOUNT}, region ${REGION}, stack ${STACK}, image ${IMAGE}"
 
+# Reserving 5 executions needs an account limit of at least 15 (10 must stay unreserved);
+# new accounts start at 10, so cap concurrency only where the account allows it.
+LIMIT="$(aws lambda get-account-settings --region "$REGION" --query AccountLimit.ConcurrentExecutions --output text)"
+CONCURRENCY=5
+if [ "$LIMIT" -lt 15 ]; then CONCURRENCY=0; echo "==> Lambda concurrency limit is ${LIMIT}: deploying without reserved concurrency"; fi
+
 aws ecr describe-repositories --repository-names "$REPO" --region "$REGION" >/dev/null 2>&1 \
   || aws ecr create-repository --repository-name "$REPO" --region "$REGION" \
        --image-scanning-configuration scanOnPush=true --encryption-configuration encryptionType=AES256 >/dev/null
@@ -38,7 +44,7 @@ echo "==> Deploying CloudFormation stack"
 aws cloudformation deploy --region "$REGION" --stack-name "$STACK" \
   --template-file "$ROOT/infrastructure/aws/template.yaml" \
   --capabilities CAPABILITY_IAM \
-  --parameter-overrides "ImageUri=${REGISTRY}/${REPO}@${DIGEST}" "GitSha=${TAG}"
+  --parameter-overrides "ImageUri=${REGISTRY}/${REPO}@${DIGEST}" "GitSha=${TAG}" "MaxConcurrency=${CONCURRENCY}"
 
 URL="$(aws cloudformation describe-stacks --region "$REGION" --stack-name "$STACK" --query "Stacks[0].Outputs[?OutputKey=='FunctionUrl'].OutputValue" --output text)"
 echo "==> Deployed: ${URL}"

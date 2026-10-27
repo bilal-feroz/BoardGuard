@@ -1,21 +1,42 @@
-# Demo video — script and shot list (≤ 5 min)
+# Demo video — how it is made (≤ 5 min)
 
-All footage is the running application recorded with Playwright (`scripts/record-demo.mjs`),
-not mock-ups. Captions are generated from the same script so they align with the recorded events.
-Narration lines below can be recorded by the team; the auto-generated cut uses captions only.
+The video is generated from this repository by `scripts/video/` so every shot can be reproduced:
 
-| Time | Shot (real app) | Narration / caption |
+| Step | Script | What it does |
 |---|---|---|
-| 0:00–0:15 | Title, then the real battery-leak photo (S01) | Repair technicians inspect logic boards under microscopes. The hard cases are ambiguous: glare, blur, too little magnification. |
-| 0:15–0:40 | 3D board overview, orbit, select REGION-B, camera flies in | BoardGuard is a workstation for that job. The board model is representative; each region links to real captures. |
-| 0:40–1:20 | S02 first capture: quality gate, two candidates, glare layer on, C01 local evidence 28 % glare | OpenCV 5 measures the capture and localises two suspected bridges. One sits in a specular hotspot. The agent will not decide on that evidence. |
-| 1:20–1:45 | Next-action card: rule R-E1, recapture instruction | It asks for a specific new look: diffuse light, same framing. |
-| 1:45–2:25 | Provide diffuse recapture → registered (≈3.9k inliers) → C01 not reproduced (low), C02 persisted (high) | The new capture is registered to the first. The glare suspicion is not reproduced, and its priority drops. The other candidate, a fibre across two leads, persists, so it goes to the technician. |
-| 2:25–2:45 | Technician dismisses C01, confirms C02 → "Electrical verification pending" | The technician decides. BoardGuard recommends a continuity check and never claims one. |
-| 2:45–3:05 | Evidence screen: evidence chain and trace detail with tool contract | Every tool call, rule and human action is traced and exportable. |
-| 3:05–3:45 | S03: split slider, difference map, findings-vs-change, confirm → completion | Before and after captures are registered and compared. Visible change is documented, and electrical verification stays pending. |
-| 3:45–4:00 | S05: real rework pair → "Registration failed — overlay withheld" | When alignment is unreliable, BoardGuard says so instead of drawing a misleading overlay. |
-| 4:00–4:25 | System screen: OpenCV 5.0.0 runtime, live probe (environment header), evaluation | Real OpenCV 5 processing, on AWS Lambda in deployment, with a reproducible evaluation. |
-| 4:25–4:45 | Limitations card, tagline | What it is not: an electrical tester or a validated diagnostic. What it is: a visual inspection aid that knows when to look again. |
+| Narration | `tts.py` + `narration.json` | Kokoro-82M (open-weight, Apache-2.0) synthetic voice, one WAV per segment; the captions use the same text |
+| App footage | `record-app.mjs` | Drives the real workstation (single-origin production build, OpenCV 5.0.0 processing live) with Playwright and records it through a Chrome DevTools screencast. The narration paces the run; camera moves are CSS zooms, so text stays sharp. Unnarrated navigation is fast-forwarded 3× in the edit and labelled on screen |
+| Motion graphics | `cards.html` + `render-cards.mjs` | Hook, title, agent loop, AWS architecture, results, limits and team cards, rendered frame by frame at 30 fps |
+| Music | `music.py` | A 112 BPM bed synthesised in numpy (no samples, nothing to license), ducked under the voice |
+| Edit | `build.py` | Cuts the recordings to the narration, burns in captions, mixes voice and music, checks the 5-minute limit |
 
-Team introduction: add authentic footage of the team if desired. None is fabricated in the generated cut.
+## Running order
+
+| Section | Shot | Narration (abridged) |
+|---|---|---|
+| Hook | Licensed PCB photos under a microscope reticle: glare, blur, 0.5 mm pitch | Glare, blur and half-millimetre leads turn every photo into a guess |
+| Title | BoardGuard logo and tagline | An AI microscope assistant that knows when to look again |
+| Agent loop | Perceive (OpenCV 5) → decide (16 rules) → act (request a better look) → human | When the evidence is weak, it asks for a better look instead of guessing |
+| S02 | 3D board → TQFP-144 under a ring light; C01 in a hotspot (28 % glare), glare mask | Two suspected bridges; C01 sits inside a specular hotspot |
+| Region check | `R`, drag over the hotspot → *insufficient · glare* | Technicians can check any region themselves |
+| R-E1 | Next-action card: diffuse light, same framing | The agent will not decide on that evidence |
+| Reinspection | Diffuse recapture → registered (SIFT + MAGSAC) → C01 not reproduced, C02 persists (a fibre across two leads) | Every finding is checked again |
+| Ruler | `M`, calibrate from the 0.5 mm lead pitch → package body ≈ 19.7 mm | The ruler reads in millimetres |
+| Decisions | Dismiss C01 → Undo (R-H2) → dismiss → confirm C02 → electrical verification pending | The technician makes the call; BoardGuard never claims an electrical result |
+| Trace | Evidence screen with tool inputs/outputs | Every tool call, rule and human decision is traced |
+| S03 | Before/after split slider, difference map, completion | Visible change documented; electrical verification stays with the technician |
+| S05 | Real rework pair → registration failed, overlay withheld | When alignment is unreliable, BoardGuard says so |
+| Architecture | Browser → Lambda Function URL → Lambda (FastAPI, agent, OpenCV 5) → S3, CloudWatch; one CloudFormation stack | The whole stack deploys from one template |
+| System | Live runtime identity and processing probe | OpenCV 5.0.0 running live |
+| Results | 81/81 warps, 0.09 px, 23/23 rejected, 5/10 → 10/10 glare cases, 9/9 scenarios, 0 unsafe conclusions | We measured it |
+| Limits, team | Not an electrical tester, not a validated diagnostic; team, links | A visual inspection aid that knows when to look again |
+
+Reproduce (from the repo root, with the API serving the static UI on port 8090):
+
+```bash
+python -I scripts/video/tts.py <kokoro-models> scripts/video/narration.json <work>/narration
+node scripts/video/record-app.mjs main http://127.0.0.1:8090 <work>/narration <work>/rec-main
+node scripts/video/record-app.mjs system <deployed-url> <work>/narration <work>/rec-system
+node scripts/video/render-cards.mjs <work>/narration <work>/cards
+python -I scripts/video/build.py <work> scripts/video/narration.json docs/submission/video/boardguard-demo.mp4
+```

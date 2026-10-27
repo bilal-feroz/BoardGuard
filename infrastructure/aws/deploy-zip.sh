@@ -16,8 +16,14 @@ KEY="lambda/boardguard-${TAG}-$(date +%s).zip"
 
 echo "==> Account ${ACCOUNT}, region ${REGION}, stack ${STACK}"
 
+# Reserving 5 executions needs an account limit of at least 15 (10 must stay unreserved);
+# new accounts start at 10, so cap concurrency only where the account allows it.
+LIMIT="$(aws lambda get-account-settings --region "$REGION" --query AccountLimit.ConcurrentExecutions --output text)"
+CONCURRENCY=5
+if [ "$LIMIT" -lt 15 ]; then CONCURRENCY=0; echo "==> Lambda concurrency limit is ${LIMIT}: deploying without reserved concurrency"; fi
+
 echo "==> Building static UI (same-origin API)"
-(cd "$ROOT/apps/web" && npm ci --no-audit --no-fund && rm -f .env.production.local && NEXT_PUBLIC_API_BASE="" npx next build)
+(cd "$ROOT/apps/web" && { [ -d node_modules ] || npm ci --no-audit --no-fund; } && rm -f .env.production.local && NEXT_PUBLIC_API_BASE="" npx next build)
 
 echo "==> Packaging Lambda zip"
 python "$ROOT/infrastructure/aws/package_lambda.py"
@@ -39,7 +45,7 @@ echo "==> Deploying CloudFormation stack"
 aws cloudformation deploy --region "$REGION" --stack-name "$STACK" \
   --template-file "$ROOT/infrastructure/aws/template-zip.yaml" \
   --capabilities CAPABILITY_IAM \
-  --parameter-overrides "CodeBucket=${CODE_BUCKET}" "CodeKey=${KEY}" "GitSha=${TAG}"
+  --parameter-overrides "CodeBucket=${CODE_BUCKET}" "CodeKey=${KEY}" "GitSha=${TAG}" "MaxConcurrency=${CONCURRENCY}"
 
 URL="$(aws cloudformation describe-stacks --region "$REGION" --stack-name "$STACK" --query "Stacks[0].Outputs[?OutputKey=='FunctionUrl'].OutputValue" --output text)"
 echo "==> Deployed: ${URL}"

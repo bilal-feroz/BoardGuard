@@ -1,0 +1,96 @@
+{
+  "voice": "af_heart",
+  "speed": 1.08,
+  "team": ["Bilal Feroz", "Fuad Ahamed"],
+  "segments": [
+    {
+      "id": "hook", "kind": "card", "captions": false,
+      "text": "Repair technicians hunt for faults on logic boards under a microscope. Glare, blur and leads half a millimetre apart turn every photo into a guess."
+    },
+    {
+      "id": "title", "kind": "card", "captions": false,
+      "text": "This is BoardGuard: an AI microscope assistant that knows when to look again.",
+      "say": "This is BoardGuard. An AI microscope assistant that knows when to look again."
+    },
+    {
+      "id": "loop", "kind": "card",
+      "text": "It runs a real perception, decision and action loop. OpenCV 5 measures the evidence. An agent applies explicit, testable rules. And when the evidence is weak, it asks for a better look instead of guessing.",
+      "say": "It runs a real perception, decision, and action loop. Open CV five measures the evidence. An agent applies explicit, testable rules. And when the evidence is weak, it asks for a better look, instead of guessing."
+    },
+    {
+      "id": "app_intro", "kind": "app",
+      "text": "This is the live app. The 3D board is for navigation, and every region links to real microscope captures. Scenario 02: a fine-pitch TQFP chip under a ring light.",
+      "say": "This is the live app. The 3D board is for navigation, and every region links to real microscope captures. Scenario two: a fine-pitch T Q F P chip, under a ring light."
+    },
+    {
+      "id": "app_candidates", "kind": "app",
+      "text": "OpenCV 5 checks the image quality, then finds two suspected solder bridges. But C01 sits inside a specular hotspot: 28% of its region is glare.",
+      "say": "Open CV five checks the image quality, then finds two suspected solder bridges. But C zero one sits inside a specular hotspot. Twenty-eight percent of its region is glare."
+    },
+    {
+      "id": "app_region", "kind": "app",
+      "text": "Technicians can check any region themselves. Press R, drag a box, and BoardGuard measures glare, focus, exposure and lead resolution right there. Verdict: insufficient.",
+      "say": "Technicians can check any region themselves. Press R, drag a box, and BoardGuard measures glare, focus, exposure, and lead resolution, right there. Verdict: insufficient."
+    },
+    {
+      "id": "app_request", "kind": "app",
+      "text": "So the agent will not decide. Rule R-E1 requests one specific new observation: diffuse light, same framing.",
+      "say": "So the agent will not decide. Rule R E one requests one specific new observation. Diffuse light, same framing."
+    },
+    {
+      "id": "app_reinspect", "kind": "app",
+      "text": "The technician recaptures. SIFT and MAGSAC register the new image to the first, and every finding is checked again. C01 is not reproduced, so its priority drops. C02 persists: a fibre lying across two leads.",
+      "say": "The technician recaptures. Sift and Mag-sack register the new image to the first, and every finding is checked again. C zero one is not reproduced, so its priority drops. C zero two persists. A fibre, lying across two leads."
+    },
+    {
+      "id": "app_ruler", "kind": "app",
+      "text": "Need real dimensions? Calibrate from the detected lead row with the package pitch, 0.5 mm, and the ruler reads in millimetres.",
+      "say": "Need real dimensions? Calibrate from the detected lead row with the package pitch, half a millimetre, and the ruler reads in millimetres."
+    },
+    {
+      "id": "app_decide", "kind": "app",
+      "text": "The technician makes the call. Dismiss C01. Changed your mind? Undo it, and the withdrawal stays on the record. Confirm C02, and BoardGuard recommends a continuity check. It never claims one.",
+      "say": "The technician makes the call. Dismiss C zero one. Changed your mind? Undo it, and the withdrawal stays on the record. Confirm C zero two, and BoardGuard recommends a continuity check. It never claims one."
+    },
+    {
+      "id": "app_trace", "kind": "app",
+      "text": "Every tool call, rule and human decision is traced, timed and exportable."
+    },
+    {
+      "id": "app_verify", "kind": "app",
+      "text": "After the repair, BoardGuard registers the before and after captures, maps what changed, and links that change back to each finding."
+    },
+    {
+      "id": "app_complete", "kind": "app",
+      "text": "Visible change documented. Electrical verification stays with the technician."
+    },
+    {
+      "id": "app_withheld", "kind": "app",
+      "text": "And when two photos cannot be aligned reliably, BoardGuard says so and withholds the overlay."
+    },
+    {
+      "id": "arch", "kind": "card",
+      "text": "Under the hood, the workstation and its FastAPI service run on an Amazon Lightsail instance in us-east-1, and that is where the agent and every OpenCV 5 pipeline execute. Releases ship through a private, encrypted S3 bucket. The repo also includes a CloudFormation stack for Lambda, S3 and CloudWatch.",
+      "say": "Under the hood, the workstation and its Fast A P I service run on an Amazon Lightsail instance in U S East one, and that is where the agent, and every Open CV five pipeline, execute. Releases ship through a private, encrypted S three bucket. The repo also includes a CloudFormation stack, for Lambda, S three, and CloudWatch."
+    },
+    {
+      "id": "app_system", "kind": "app",
+      "text": "The System screen shows it live: OpenCV 5.0.0 running on AWS Lightsail, with a real processing probe.",
+      "say": "The System screen shows it live. Open CV five, running on A W S Lightsail, with a real processing probe."
+    },
+    {
+      "id": "results", "kind": "card",
+      "text": "And we measured it. Registration succeeded on all 81 known warps, with a median corner error of 0.09 px, and rejected all 23 unrelated pairs. On 10 synthetic glare cases, a single image got 5 wrong. After one targeted recapture, all 10 were right. 9 of 9 agent scenarios passed, with zero unsafe automatic conclusions.",
+      "say": "And we measured it. Registration succeeded on all eighty-one known warps, with a median corner error under a tenth of a pixel, and rejected all twenty-three unrelated pairs. On ten synthetic glare cases, a single image got five wrong. After one targeted recapture, all ten were right. Nine of nine agent scenarios passed, with zero unsafe automatic conclusions."
+    },
+    {
+      "id": "limits", "kind": "card", "captions": false,
+      "text": "BoardGuard is not an electrical tester, and not a validated diagnostic. It is a visual inspection aid that knows when to look again."
+    },
+    {
+      "id": "team", "kind": "card", "captions": false,
+      "text": "Built by team BoardGuard for the OpenCV AI Competition 2026.",
+      "say": "Built by team BoardGuard, for the Open CV A I Competition, twenty twenty-six."
+    }
+  ]
+}
