@@ -33,3 +33,4 @@ apps/web/playwright-report/
 !apps/web/.env.development
 docs/submission/video/raw.webm
 dist/
+docs/submission/video/boardguard-demo-youtube.mp4

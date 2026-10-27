@@ -40,3 +40,7 @@ node scripts/video/record-app.mjs system <deployed-url> <work>/narration <work>/
 node scripts/video/render-cards.mjs <work>/narration <work>/cards
 python -I scripts/video/build.py <work> scripts/video/narration.json docs/submission/video/boardguard-demo.mp4
 ```
+
+The published cut uses `narration-vercel.json`, whose architecture and System lines describe the Vercel live
+demo and the AWS template accurately while the AWS deployment is pending; `narration.json` holds the wording for
+a cut recorded against the deployed AWS Lambda stack.

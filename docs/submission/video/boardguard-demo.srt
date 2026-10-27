@@ -1,0 +1,247 @@
+1
+00:00:00,600 --> 00:00:05,110
+Repair technicians hunt for faults on logic boards under a microscope.
+
+2
+00:00:05,110 --> 00:00:10,008
+Glare, blur and leads half a millimetre apart turn every photo into a guess.
+
+3
+00:00:11,308 --> 00:00:12,438
+This is BoardGuard:
+
+4
+00:00:12,438 --> 00:00:15,831
+an AI microscope assistant that knows when to look again.
+
+5
+00:00:17,631 --> 00:00:21,057
+It runs a real perception, decision and action loop.
+
+6
+00:00:21,057 --> 00:00:23,100
+OpenCV 5 measures the evidence.
+
+7
+00:00:23,100 --> 00:00:25,868
+An agent applies explicit, testable rules.
+
+8
+00:00:25,868 --> 00:00:30,942
+And when the evidence is weak, it asks for a better look instead of guessing.
+
+9
+00:00:32,742 --> 00:00:34,263
+This is the live app.
+
+10
+00:00:34,263 --> 00:00:39,551
+The 3D board is for navigation, and every region links to real microscope
+
+11
+00:00:39,551 --> 00:00:40,202
+captures.
+
+12
+00:00:40,202 --> 00:00:41,072
+Scenario 02:
+
+13
+00:00:41,072 --> 00:00:44,113
+a fine-pitch TQFP chip under a ring light.
+
+14
+00:00:45,818 --> 00:00:51,945
+OpenCV 5 checks the image quality, then finds two suspected solder bridges.
+
+15
+00:00:51,945 --> 00:00:55,132
+But C01 sits inside a specular hotspot:
+
+16
+00:00:55,132 --> 00:00:57,337
+28% of its region is glare.
+
+17
+00:00:57,935 --> 00:01:00,871
+Technicians can check any region themselves.
+
+18
+00:01:00,871 --> 00:01:04,741
+Press R, drag a box, and BoardGuard measures glare, focus,
+
+19
+00:01:04,741 --> 00:01:07,477
+exposure and lead resolution right there.
+
+20
+00:01:07,477 --> 00:01:08,011
+Verdict:
+
+21
+00:01:08,011 --> 00:01:08,879
+insufficient.
+
+22
+00:01:09,577 --> 00:01:11,598
+So the agent will not decide.
+
+23
+00:01:11,598 --> 00:01:14,943
+Rule R-E1 requests one specific new observation:
+
+24
+00:01:14,943 --> 00:01:16,894
+diffuse light, same framing.
+
+25
+00:01:20,495 --> 00:01:22,401
+The technician recaptures.
+
+26
+00:01:22,401 --> 00:01:26,212
+SIFT and MAGSAC register the new image to the first,
+
+27
+00:01:26,212 --> 00:01:28,777
+and every finding is checked again.
+
+28
+00:01:28,777 --> 00:01:32,075
+C01 is not reproduced, so its priority drops.
+
+29
+00:01:32,075 --> 00:01:33,028
+C02 persists:
+
+30
+00:01:33,028 --> 00:01:35,300
+a fibre lying across two leads.
+
+31
+00:01:35,959 --> 00:01:37,256
+Need real dimensions?
+
+32
+00:01:37,256 --> 00:01:41,456
+Calibrate from the detected lead row with the package pitch, 0.5 mm,
+
+33
+00:01:41,456 --> 00:01:43,618
+and the ruler reads in millimetres.
+
+34
+00:01:44,322 --> 00:01:46,407
+The technician makes the call.
+
+35
+00:01:46,407 --> 00:01:47,241
+Dismiss C01.
+
+36
+00:01:47,241 --> 00:01:48,492
+Changed your mind?
+
+37
+00:01:48,492 --> 00:01:51,829
+Undo it, and the withdrawal stays on the record.
+
+38
+00:01:51,829 --> 00:01:55,860
+Confirm C02, and BoardGuard recommends a continuity check.
+
+39
+00:01:55,860 --> 00:01:57,250
+It never claims one.
+
+40
+00:01:57,923 --> 00:02:02,510
+Every tool call, rule and human decision is traced, timed and exportable.
+
+41
+00:02:08,585 --> 00:02:12,687
+After the repair, BoardGuard registers the before and after captures,
+
+42
+00:02:12,687 --> 00:02:16,372
+maps what changed, and links that change back to each finding.
+
+43
+00:02:16,886 --> 00:02:18,499
+Visible change documented.
+
+44
+00:02:18,499 --> 00:02:21,601
+Electrical verification stays with the technician.
+
+45
+00:02:27,423 --> 00:02:30,224
+And when two photos cannot be aligned reliably,
+
+46
+00:02:30,224 --> 00:02:32,906
+BoardGuard says so and withholds the overlay.
+
+47
+00:02:34,543 --> 00:02:40,233
+Under the hood, the Next.js workstation calls a FastAPI service where the agent
+
+48
+00:02:40,233 --> 00:02:42,538
+and every OpenCV 5 pipeline run.
+
+49
+00:02:42,538 --> 00:02:47,940
+For AWS, one CloudFormation template deploys it to Lambda behind a Function
+
+50
+00:02:47,940 --> 00:02:52,118
+URL, with a private S3 evidence store and CloudWatch logs.
+
+51
+00:02:52,118 --> 00:02:55,215
+The live demo runs the same code on Vercel.
+
+52
+00:02:57,115 --> 00:02:59,100
+The System screen shows it live:
+
+53
+00:02:59,100 --> 00:03:03,195
+OpenCV 5.0.0 on the live deployment, with a real processing probe.
+
+54
+00:03:11,100 --> 00:03:12,476
+And we measured it.
+
+55
+00:03:12,476 --> 00:03:15,737
+Registration succeeded on all 81 known warps,
+
+56
+00:03:15,737 --> 00:03:21,170
+with a median corner error of 0.09 px, and rejected all 23 unrelated pairs.
+
+57
+00:03:21,170 --> 00:03:25,228
+On 10 synthetic glare cases, a single image got 5 wrong.
+
+58
+00:03:25,228 --> 00:03:28,705
+After one targeted recapture, all 10 were right.
+
+59
+00:03:28,705 --> 00:03:33,777
+9 of 9 agent scenarios passed, with zero unsafe automatic conclusions.
+
+60
+00:03:35,477 --> 00:03:39,893
+BoardGuard is not an electrical tester, and not a validated diagnostic.
+
+61
+00:03:39,893 --> 00:03:43,626
+It is a visual inspection aid that knows when to look again.
+
+62
+00:03:45,226 --> 00:03:50,389
+Built by team BoardGuard for the OpenCV AI Competition 2026.

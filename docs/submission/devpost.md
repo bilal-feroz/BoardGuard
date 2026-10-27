@@ -48,8 +48,9 @@ wanted software that behaves the same way.
 * **FastAPI** service; **Next.js 16 + React Three Fiber** workstation UI.
 * **Live demo on Vercel:** the static UI on the CDN and the FastAPI/OpenCV 5 service as one Python
   Function; inspections are shared between function instances through Vercel's Runtime Cache.
-* **AWS:** one container on **Lambda** (Lambda Web Adapter) behind a Function URL, a private **S3**
-  evidence store with 7-day expiry, **CloudWatch** logs, **ECR**, all in one CloudFormation template.
+* **AWS:** **Lambda** behind a Function URL (Python 3.12 zip, or one container with the Lambda Web
+  Adapter), a private **S3** evidence store with 7-day expiry, **CloudWatch** logs and **ECR**, all in one
+  CloudFormation template with a one-command deploy and a verification script (`infrastructure/aws`).
 * 27 licence-checked Wikimedia Commons photographs plus a reproducible evaluation script.
 
 ## Challenges we ran into

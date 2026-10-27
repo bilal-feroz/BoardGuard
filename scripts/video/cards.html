@@ -297,6 +297,10 @@ function archLightsail() {
 
 function archLambda() {
   el("div", "grid-bg");
+  if (Q.get("variant") === "vercel") {
+    A(el("div", "abs", "Live demo today: the same code on <span style='color:var(--teal2)'>Vercel</span>.<br>AWS deploy: <span class='mono' style='color:var(--teal2)'>infrastructure/aws</span>",
+      "left:90px;top:700px;width:470px;font-size:25px;line-height:1.45;color:var(--muted)"), "fadeIn", 0.5, at(0.84));
+  }
   A(el("div", "abs kicker", "Architecture", "left:110px;top:80px"), "fadeLeft", 0.5, 0.15);
   A(el("div", "abs h1", "OpenCV 5 on AWS, end to end", "left:110px;top:122px;font-size:54px"), "fadeLeft", 0.5, 0.3);
   // AWS boundary (CloudFormation stack)

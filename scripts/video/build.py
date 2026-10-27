@@ -1,9 +1,9 @@
 """Assemble the demo video: motion-graphics cards + live-app recordings + narration + music + captions.
 
-    python -I scripts/video/build.py <workDir> <narration.json> <out.mp4> [narrationDir] [systemRecDir]
+    python -I scripts/video/build.py <workDir> <narration.json> <out.mp4> [narrationDir] [systemRecDir] [cardsDir]
 
 <workDir> holds narration/ (tts.py), cards/ (render-cards.mjs) and rec-main/, rec-system/
-(record-app.mjs); the last two arguments pick other narration / System recordings in it.
+(record-app.mjs); the optional arguments pick other narration / System recording / card sets in it.
 The music is generated here (music.py) for the exact running time.
 """
 
@@ -25,7 +25,8 @@ segs = {s["id"]: s for s in json.loads(script.read_text(encoding="utf-8"))["segm
 nar = work / (sys.argv[4] if len(sys.argv) > 4 else "narration")
 REC_DIRS = {"main": "rec-main", "system": sys.argv[5] if len(sys.argv) > 5 else "rec-system"}
 durations = json.loads((nar / "durations.json").read_text())
-cards = json.loads((work / "cards" / "cards.json").read_text())
+CARDS = work / (sys.argv[6] if len(sys.argv) > 6 else "cards")
+cards = json.loads((CARDS / "cards.json").read_text())
 
 
 def run(*cmd, cwd=None):
@@ -39,7 +40,7 @@ def encode_recording(name):
     cues = json.loads((rec / "cues.json").read_text())
     fast = json.loads((rec / "fast.json").read_text()) if (rec / "fast.json").exists() else []
     frames = meta["frames"]
-    start, stop = max(frames[0]["t"], cues[0]["t"] - 0.8), meta["end"]
+    start, stop = cues[0]["t"] - 0.8, meta["end"]  # the first frame is held back to `start` if it came later
 
     def warp(x):  # recording time -> edit time, with fast-forwarded spans compressed
         v = x - start
@@ -53,7 +54,7 @@ def encode_recording(name):
     sel = sel[first:]
     lines = ["ffconcat version 1.0"]
     for i, f in enumerate(sel):
-        t0, t1 = max(f["t"], start), (sel[i + 1]["t"] if i + 1 < len(sel) else stop)
+        t0, t1 = (start if i == 0 else f["t"]), (sel[i + 1]["t"] if i + 1 < len(sel) else stop)
         if warp(t1) - warp(t0) > 0.0005:
             lines += [f"file 'frames/{f['f']}'", f"duration {warp(t1) - warp(t0):.4f}"]
     lines.append(f"file 'frames/{sel[-1]['f']}'")
@@ -75,7 +76,7 @@ for item in ORDER:
         events += [(cid, t + off) for cid, off in cues]
     else:
         c = cards[item]
-        timeline.append((work / "cards" / f"{item}.mp4", c["d"]))
+        timeline.append((CARDS / f"{item}.mp4", c["d"]))
         events.append((item, t + c["lead"]))
     t += timeline[-1][1]
 total = t
@@ -118,18 +119,21 @@ ass = ["[Script Info]", "ScriptType: v4.00+", "PlayResX: 1920", "PlayResY: 1080"
        "ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
        "Style: Cap,Segoe UI Semibold,40,&H00EBF0F0,&H00EBF0F0,&H33191411,&H33191411,0,0,0,0,100,100,0,0,3,13,0,2,220,220,44,1", "",
        "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"]
+srt = []
 for cid, t0 in events:
     seg = segs[cid]
-    if seg.get("captions") is False:
-        continue
     parts = chunks(seg["text"])
     n_chars = sum(len(p) for p in parts)
     tt = t0
     for p in parts:
         d = durations[cid] * len(p) / n_chars
-        ass.append(f"Dialogue: 0,{ts(tt)},{ts(tt + d)},Cap,,0,0,0,,{p}")
+        if seg.get("captions") is not False:  # cards that show their own words are not captioned on screen
+            ass.append(f"Dialogue: 0,{ts(tt)},{ts(tt + d)},Cap,,0,0,0,,{p}")
+        ms = lambda s: f"{int(s // 3600):02d}:{int(s // 60) % 60:02d}:{int(s) % 60:02d},{int(s * 1000) % 1000:03d}"
+        srt.append(f"{len(srt) + 1}\n{ms(tt)} --> {ms(tt + d)}\n{p}\n")
         tt += d
 (work / "captions.ass").write_text("\n".join(ass) + "\n", encoding="utf-8")
+out.with_suffix(".srt").write_text("\n".join(srt), encoding="utf-8")  # full transcript for YouTube
 
 # ---------------------------------------------------------------- final encode
 (work / "timeline.ffconcat").write_text("ffconcat version 1.0\n" + "".join(f"file '{c.as_posix()}'\n" for c, _ in timeline))

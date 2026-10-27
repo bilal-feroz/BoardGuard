@@ -229,10 +229,14 @@ if (SECTION === "main") {
   await at(durations.app_request - 0.4);
   await camReset();
 
-  await cue("app_reinspect"); // recapture, registration, multi-view comparison
+  // Diffuse recapture: the analysis wait is fast-forwarded and the narration starts on the result.
   await glide(btn(/TQFP-144 recaptured with diffuse light/));
+  await fast(true);
   await shown("Technician review required");
-  await pause(500);
+  await pause(300);
+  await fast(false);
+  await cue("app_reinspect"); // registration and multi-view comparison
+  await pause(300);
   await camTo(page.getByText(/\d+ inliers/).filter({ visible: true }).first(), 1.9, 1100, -120, 0);
   await at(durations.app_reinspect * 0.55);
   await camTo(page.getByText("not repr.", { exact: true }).first(), 1.9, 1000, -150, 15);

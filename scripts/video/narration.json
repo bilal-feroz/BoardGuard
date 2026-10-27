@@ -13,7 +13,7 @@
       "say": "This is BoardGuard. An AI microscope assistant that knows when to look again."
     },
     {
-      "id": "loop", "kind": "card",
+      "id": "loop", "kind": "card", "captions": false,
       "text": "It runs a real perception, decision and action loop. OpenCV 5 measures the evidence. An agent applies explicit, testable rules. And when the evidence is weak, it asks for a better look instead of guessing.",
       "say": "It runs a real perception, decision, and action loop. Open CV five measures the evidence. An agent applies explicit, testable rules. And when the evidence is weak, it asks for a better look, instead of guessing."
     },
@@ -69,17 +69,17 @@
       "text": "And when two photos cannot be aligned reliably, BoardGuard says so and withholds the overlay."
     },
     {
-      "id": "arch", "kind": "card",
-      "text": "Under the hood, the workstation and its FastAPI service run on an Amazon Lightsail instance in us-east-1, and that is where the agent and every OpenCV 5 pipeline execute. Releases ship through a private, encrypted S3 bucket. The repo also includes a CloudFormation stack for Lambda, S3 and CloudWatch.",
-      "say": "Under the hood, the workstation and its Fast A P I service run on an Amazon Lightsail instance in U S East one, and that is where the agent, and every Open CV five pipeline, execute. Releases ship through a private, encrypted S three bucket. The repo also includes a CloudFormation stack, for Lambda, S three, and CloudWatch."
+      "id": "arch", "kind": "card", "captions": false,
+      "text": "Under the hood, the Next.js workstation calls a FastAPI service on AWS Lambda through a Function URL. The agent and every OpenCV 5 pipeline run inside Lambda. Evidence goes to a private, encrypted S3 bucket, logs go to CloudWatch, and one CloudFormation template deploys it all.",
+      "say": "Under the hood, the Next J S workstation calls a Fast A P I service on A W S Lambda, through a function URL. The agent, and every Open CV five pipeline, run inside Lambda. Evidence goes to a private, encrypted S three bucket, logs go to CloudWatch, and one CloudFormation template deploys it all."
     },
     {
       "id": "app_system", "kind": "app",
-      "text": "The System screen shows it live: OpenCV 5.0.0 running on AWS Lightsail, with a real processing probe.",
-      "say": "The System screen shows it live. Open CV five, running on A W S Lightsail, with a real processing probe."
+      "text": "The System screen shows it live: OpenCV 5.0.0 running on AWS Lambda, with a real processing probe.",
+      "say": "The System screen shows it live. Open CV five, running on A W S Lambda, with a real processing probe."
     },
     {
-      "id": "results", "kind": "card",
+      "id": "results", "kind": "card", "captions": false,
       "text": "And we measured it. Registration succeeded on all 81 known warps, with a median corner error of 0.09 px, and rejected all 23 unrelated pairs. On 10 synthetic glare cases, a single image got 5 wrong. After one targeted recapture, all 10 were right. 9 of 9 agent scenarios passed, with zero unsafe automatic conclusions.",
       "say": "And we measured it. Registration succeeded on all eighty-one known warps, with a median corner error under a tenth of a pixel, and rejected all twenty-three unrelated pairs. On ten synthetic glare cases, a single image got five wrong. After one targeted recapture, all ten were right. Nine of nine agent scenarios passed, with zero unsafe automatic conclusions."
     },
