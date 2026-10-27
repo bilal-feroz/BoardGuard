@@ -26,6 +26,9 @@ from .vision.imageio import MAX_UPLOAD_BYTES, ImageError, decode_image
 
 log = logging.getLogger("boardguard")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+# The Lambda runtime configures the root logger first (so basicConfig is a no-op there, at WARNING):
+# set our own level so per-request lines still reach CloudWatch.
+log.setLevel(logging.INFO)
 
 
 def _fixtures_dir() -> Path:

@@ -105,9 +105,15 @@ and session state live in a private **S3** bucket (SSE-S3, public access blocked
 presigned URLs for the browser) so any Lambda instance can continue any inspection; **CloudWatch Logs**
 receives per-request processing logs; **ECR** stores images (scan on push). IAM is least-privilege
 (S3 Get/Put on one prefix, log writes). The whole stack is one CloudFormation template plus a deploy and a
-verification script (`infrastructure/aws`). Deployment status: see `docs/submission/STATUS.md`.
+verification script (`infrastructure/aws`).
 
-**Live demo (Vercel).** The same API code runs at https://boardguard-three.vercel.app as one Python
+**Deployed:** https://m5fd6rcr67gfrvw3elkxctbcvu0xseam.lambda-url.us-east-1.on.aws/ (us-east-1, Python 3.12 zip
+package with the OpenCV 5 manylinux wheels, 3008 MB). `GET /api/runtime` reports `environment: aws-lambda` and
+`storage: aws-s3`; a quality analysis takes about 0.3–0.4 s of server time; each request is logged to CloudWatch with
+its route, status and duration. `docs/evaluation/aws-proof.md` holds the captured evidence, and the 8 browser
+end-to-end scenarios pass against this endpoint. The account is on the AWS Free plan.
+
+**Mirror (Vercel).** The same API code also runs at https://boardguard-three.vercel.app as one Python
 Function (zero-config FastAPI), with the static UI on Vercel's CDN. Function instances do not share
 `/tmp`, so captures, overlays and session state are mirrored into Vercel's regional Runtime Cache and
 sessions are always read from it. Any instance can therefore continue any inspection, which plays the

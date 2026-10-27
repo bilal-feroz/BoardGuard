@@ -34,9 +34,16 @@ FIXTURE="$(ls "$ROOT"/datasets/fixtures/images/*.jpg | head -n 1)"
   echo '```'
   echo "## CloudWatch log lines (last 10 minutes)"
   echo '```'
-  aws logs filter-log-events --region "$REGION" --log-group-name "/aws/lambda/${STACK}-vision" \
-    --start-time $(( ($(date +%s) - 600) * 1000 )) --filter-pattern '"request POST"' \
-    --query 'events[-10:].message' --output text | tr '\t' '\n'
+  # New lines take a few seconds to become searchable. MSYS_NO_PATHCONV stops Git Bash on Windows
+  # from rewriting the /aws/... log-group name into a file path.
+  for _ in 1 2 3 4 5 6; do
+    LINES="$(MSYS_NO_PATHCONV=1 aws logs filter-log-events --region "$REGION" --log-group-name "/aws/lambda/${STACK}-vision" \
+      --start-time $(( ($(date +%s) - 600) * 1000 )) --filter-pattern '"request POST"' \
+      --query 'events[-10:].message' --output text | tr '\t' '\n')"
+    [ -n "$LINES" ] && break
+    sleep 5
+  done
+  echo "$LINES"
   echo '```'
 } | tee "$OUT"
 echo "Wrote $OUT"

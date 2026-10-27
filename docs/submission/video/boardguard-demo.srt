@@ -183,65 +183,65 @@ And when two photos cannot be aligned reliably,
 BoardGuard says so and withholds the overlay.
 
 47
-00:02:34,543 --> 00:02:40,233
-Under the hood, the Next.js workstation calls a FastAPI service where the agent
+00:02:34,543 --> 00:02:40,196
+Under the hood, the Next.js workstation calls a FastAPI service on AWS Lambda
 
 48
-00:02:40,233 --> 00:02:42,538
-and every OpenCV 5 pipeline run.
+00:02:40,196 --> 00:02:41,885
+through a Function URL.
 
 49
-00:02:42,538 --> 00:02:47,940
-For AWS, one CloudFormation template deploys it to Lambda behind a Function
+00:02:41,885 --> 00:02:45,996
+The agent and every OpenCV 5 pipeline run inside Lambda.
 
 50
-00:02:47,940 --> 00:02:52,118
-URL, with a private S3 evidence store and CloudWatch logs.
+00:02:45,996 --> 00:02:51,209
+Evidence goes to a private, encrypted S3 bucket, logs go to CloudWatch,
 
 51
-00:02:52,118 --> 00:02:55,215
-The live demo runs the same code on Vercel.
+00:02:51,209 --> 00:02:54,660
+and one CloudFormation template deploys it all.
 
 52
-00:02:57,115 --> 00:02:59,100
+00:02:56,560 --> 00:02:58,756
 The System screen shows it live:
 
 53
-00:02:59,100 --> 00:03:03,195
-OpenCV 5.0.0 on the live deployment, with a real processing probe.
+00:02:58,756 --> 00:03:03,216
+OpenCV 5.0.0 running on AWS Lambda, with a real processing probe.
 
 54
-00:03:11,100 --> 00:03:12,476
+00:03:07,782 --> 00:03:09,158
 And we measured it.
 
 55
-00:03:12,476 --> 00:03:15,737
+00:03:09,158 --> 00:03:12,419
 Registration succeeded on all 81 known warps,
 
 56
-00:03:15,737 --> 00:03:21,170
+00:03:12,419 --> 00:03:17,852
 with a median corner error of 0.09 px, and rejected all 23 unrelated pairs.
 
 57
-00:03:21,170 --> 00:03:25,228
+00:03:17,852 --> 00:03:21,910
 On 10 synthetic glare cases, a single image got 5 wrong.
 
 58
-00:03:25,228 --> 00:03:28,705
+00:03:21,910 --> 00:03:25,387
 After one targeted recapture, all 10 were right.
 
 59
-00:03:28,705 --> 00:03:33,777
+00:03:25,387 --> 00:03:30,459
 9 of 9 agent scenarios passed, with zero unsafe automatic conclusions.
 
 60
-00:03:35,477 --> 00:03:39,893
+00:03:32,159 --> 00:03:36,575
 BoardGuard is not an electrical tester, and not a validated diagnostic.
 
 61
-00:03:39,893 --> 00:03:43,626
+00:03:36,575 --> 00:03:40,308
 It is a visual inspection aid that knows when to look again.
 
 62
-00:03:45,226 --> 00:03:50,389
+00:03:41,908 --> 00:03:47,071
 Built by team BoardGuard for the OpenCV AI Competition 2026.
