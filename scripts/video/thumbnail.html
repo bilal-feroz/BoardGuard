@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BoardGuard thumbnail</title>
+<!-- YouTube / Devpost thumbnail. Rendered by Playwright at 1280x720 (?w=1280&h=720) or 1200x800. -->
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@500;600;700&display=block" rel="stylesheet">
+<style>
+  :root { --ink: #F0F0EB; --teal: #79ADA0; --teal2: #9fd3c5; --amber: #E0B064; --bg: #0B1011; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100vw; height: 100vh; overflow: hidden; background: var(--bg); font-family: "IBM Plex Sans", sans-serif; color: var(--ink); }
+  .photo { position: absolute; left: 0; top: 0; height: 100%; width: 64%; overflow: hidden; }
+  .photo img { position: absolute; width: 1597px; height: 1600px; left: calc(50% - 1525px * var(--z)); top: calc(50% - 700px * var(--z)); transform-origin: 0 0; transform: scale(var(--z)); }
+  .photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(11,16,17,0) 55%, rgba(11,16,17,.92) 92%, var(--bg)), radial-gradient(ellipse at 45% 50%, transparent 40%, rgba(0,0,0,.55)); }
+  .box { position: absolute; border: 5px solid var(--amber); border-radius: 6px; box-shadow: 0 0 30px rgba(224,176,100,.65), inset 0 0 18px rgba(224,176,100,.35); }
+  .tag { position: absolute; font: 600 30px "IBM Plex Mono", monospace; color: #111; background: var(--amber); padding: 6px 14px; border-radius: 6px; white-space: nowrap; box-shadow: 0 6px 24px rgba(0,0,0,.6); }
+  .tag2 { background: #111719; color: var(--amber); border: 2px solid var(--amber); }
+  .reticle { position: absolute; border: 3px dashed rgba(240,240,235,.55); border-radius: 50%; }
+  .right { position: absolute; right: 0; top: 0; height: 100%; width: 46%; padding: 0 5.5% 0 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; text-align: right; }
+  .brand { display: flex; align-items: center; gap: 14px; font: 700 34px "IBM Plex Sans"; letter-spacing: .08em; margin-bottom: 18px; }
+  .big { font-weight: 700; font-size: 128px; line-height: .92; letter-spacing: -.02em; text-shadow: 0 8px 40px rgba(0,0,0,.8); }
+  .big .a { color: var(--amber); }
+  .sub { margin-top: 22px; font-size: 32px; font-weight: 500; color: #d9dfdc; line-height: 1.25; }
+  .chips { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; justify-content: flex-end; }
+  .chip { font: 600 24px "IBM Plex Mono", monospace; padding: 8px 16px; border-radius: 999px; border: 2px solid rgba(121,173,160,.8); color: var(--teal2); background: rgba(121,173,160,.12); }
+  .chip.aws { border-color: rgba(255,153,0,.85); color: #ffb54a; background: rgba(255,153,0,.1); }
+</style>
+</head>
+<body>
+<div class="photo" id="photo"><img src="../../datasets/fixtures/images/s02_tqfp_ringlight.jpg" alt=""></div>
+<div class="right">
+  <div class="brand">
+    <svg width="54" height="54" viewBox="0 0 120 120" fill="none"><path d="M60 8 L104 30 L104 66 C104 90 84 106 60 114 C36 106 16 90 16 66 L16 30 Z" stroke="#79ADA0" stroke-width="7" stroke-linejoin="round"/><circle cx="60" cy="60" r="22" stroke="#F0F0EB" stroke-width="6"/><path d="M60 26 V42 M60 78 V94 M26 60 H42 M78 60 H94" stroke="#F0F0EB" stroke-width="6" stroke-linecap="round"/><circle cx="60" cy="60" r="6" fill="#79ADA0"/></svg>
+    BOARDGUARD
+  </div>
+  <div class="big">IT LOOKS<br><span class="a">AGAIN.</span></div>
+  <div class="sub">AI microscope assistant<br>for electronics repair</div>
+  <div class="chips"><span class="chip">OpenCV 5</span><span class="chip">Agentic AI</span><span class="chip aws">AWS</span></div>
+</div>
+<script>
+  // Zoom into the ring-light hotspot on the right lead row (C01) and mark it the way the app does.
+  const photo = document.getElementById("photo");
+  const z = innerHeight / 620;
+  photo.style.setProperty("--z", z);
+  const pw = photo.clientWidth, ph = photo.clientHeight;
+  const ox = pw / 2 - 1525 * z, oy = ph / 2 - 700 * z;           // image origin in the photo frame
+  const bx = ox + 1452 * z, by = oy + 636 * z, bw = 148 * z, bh = 128 * z;
+  const add = (cls, css, html = "") => { const e = document.createElement("div"); e.className = cls; e.style.cssText = css; e.innerHTML = html; photo.appendChild(e); return e; };
+  add("reticle", `left:${bx + bw / 2 - bw * 1.25}px;top:${by + bh / 2 - bw * 1.25}px;width:${bw * 2.5}px;height:${bw * 2.5}px`);
+  add("box", `left:${bx}px;top:${by}px;width:${bw}px;height:${bh}px`);
+  add("tag", `left:${bx - 330}px;top:${by - 70}px`, "SOLDER BRIDGE?");
+  add("tag tag2", `left:${bx - 330}px;top:${by + bh + 22}px`, "28% GLARE → RECAPTURE");
+</script>
+</body>
+</html>
